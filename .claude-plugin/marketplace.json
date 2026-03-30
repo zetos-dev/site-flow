@@ -1,12 +1,21 @@
 {
-  "marketplace_name": "site-flow-marketplace",
-  "owner": "zetos-dev",
-  "description": "AI-driven static website development workflow for non-technical users",
-  "version": "0.1.0",
+  "name": "site-flow-marketplace",
+  "owner": {
+    "name": "zetos-dev"
+  },
+  "metadata": {
+    "description": "AI-driven static website development workflow for non-technical users",
+    "version": "0.1.0"
+  },
   "plugins": [
     {
       "name": "site-flow",
-      "path": "./plugins/site-flow"
+      "source": "./plugins/site-flow",
+      "description": "AI-driven static website builder. Guides non-technical users from idea to professional website with design recommendations, page-by-page construction, and content management",
+      "version": "0.1.0",
+      "license": "MIT",
+      "keywords": ["website", "static-site", "frontend", "design", "no-code", "workflow"],
+      "category": "productivity"
     }
   ]
 }
