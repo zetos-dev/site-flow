@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "AI-driven static website development workflow for non-technical users",
-    "version": "0.11.0"
+    "version": "0.1.1"
   },
   "plugins": [
     {
       "name": "site-flow",
       "source": "./plugins/site-flow",
       "description": "AI-driven static website builder. Guides non-technical users from idea to professional website with design recommendations, page-by-page construction, and content management",
-      "version": "0.11.0",
+      "version": "0.1.1",
       "license": "MIT",
       "keywords": ["website", "static-site", "frontend", "design", "no-code", "workflow"],
       "category": "productivity"
