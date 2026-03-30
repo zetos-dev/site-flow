@@ -1,7 +1,9 @@
 {
   "name": "site-flow",
+  "description": "AI-driven static website development workflow. Guides non-technical users from idea to professional website with design recommendations, page-by-page construction, and content management.",
   "version": "0.1.0",
-  "description": "AI-driven static website development workflow. Guides non-technical users through site creation with professional design quality — from requirements discovery to live preview.",
-  "author": "zetos-dev",
-  "github": "https://github.com/zetos-dev/site-flow"
+  "author": {
+    "name": "zetos-dev",
+    "url": "https://github.com/zetos-dev/site-flow"
+  }
 }
