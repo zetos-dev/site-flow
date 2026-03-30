@@ -1,0 +1,12 @@
+{
+  "marketplace_name": "site-flow-marketplace",
+  "owner": "zetos-dev",
+  "description": "AI-driven static website development workflow for non-technical users",
+  "version": "0.1.0",
+  "plugins": [
+    {
+      "name": "site-flow",
+      "path": "./plugins/site-flow"
+    }
+  ]
+}
