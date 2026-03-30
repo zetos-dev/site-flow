@@ -1,364 +1,480 @@
 ---
-description: "Build the website pages using sub-agents, or update content from the content/ directory"
+description: "Build the website through staged sub-agents, or update content from the content/ directory"
 argument-hint: "[page-name | --update | --all]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion]
 ---
 
 # /site-build — Website Build Orchestrator
 
-You are the **orchestrator** for building a static website. You dispatch sub-agents to build each page, validate results, and coordinate overall progress.
+You are the **orchestrator** for building a static website. The main conversation must stay lean: you do orchestration, state checks, and user communication. All heavy execution work happens in isolated sub-agents.
 
 **Arguments**: $ARGUMENTS
 - No argument: Build the next pending page
-- `<page-name>`: Build a specific page (e.g., `/site-build about`)
-- `--update`: Re-read content from `content/` directory and update all built pages with real content
+- `<page-name>`: Build a specific page (e.g. `/site-build about`)
+- `--update`: Re-read `content/` and update built pages with newer content only
 - `--all`: Build all pending pages sequentially
+
+## Core Workflow Rule
+
+Never handle initialization, dependency setup, framework bootstrap, page implementation, and validation in one long main-session flow.
+
+Use staged sub-agents with explicit handoffs:
+1. Discovery / plan check
+2. Environment setup agent
+3. Bootstrap agent
+4. Page builder agent (one page at a time)
+5. Validation agent
+
+The main session should summarize progress and update state, but not absorb the full implementation context of each stage.
 
 ## Pre-check
 
-1. Read `.site/config.json` — if missing, tell user: "No website project found. Run `/site-init` first to set up your project."
-2. Read `.site/site-blueprint.md` for overall structure
-3. Read `.site/design-tokens.md` for design system
+1. Read `.site/config.json` — if missing, tell the user: `No website project found. Run /site-init first.`
+2. Read `.site/site-blueprint.md`
+3. Read `.site/design-tokens.md`
+4. If `.site/workflow-state.json` exists, read it. If it does not exist, infer state from project files and continue.
+5. Use Glob to inspect existing project files (`package.json`, `src/`, `index.html`, `.site/page-*-completion-report.md`).
 
-## Mode: --update (Content Update)
+## Managed State
 
-If `--update` flag is present:
+Prefer `.site/workflow-state.json` as the runtime source of truth.
 
-1. Scan the `content/` directory for all user-modified files
-2. Compare with placeholder content — identify what the user has changed
-3. For each page with updated content:
-   - Read the corresponding page source file(s)
-   - Read the updated content files from `content/NN-page-name/`
-   - Dispatch a sub-agent to update the page with real content
-   - The sub-agent should ONLY replace content — do NOT change layout, design, or structure
-4. Run build verification
-5. Output summary of what was updated
+Use this structure:
 
-**Sub-agent prompt for content update**:
+```json
+{
+  "stage": "initialized",
+  "current_target": null,
+  "completed_pages": [],
+  "failed_pages": [],
+  "bootstrap_strategy": "in-place",
+  "seed_mode": "demo-ready",
+  "content_profile": "enterprise-tech",
+  "last_action": "project initialized",
+  "last_updated_at": "<ISO date>",
+  "residue_checks": {
+    "status": "pending",
+    "warnings": [],
+    "last_checked_at": null
+  },
+  "validation_results": {
+    "status": "pending",
+    "notes": [],
+    "last_checked_at": null
+  }
+}
+```
+
+### Stage Transition Rules
+- set `stage: environment_ready` after the setup agent confirms readiness
+- set `stage: bootstrapped` only after bootstrap completes and residue scan passes
+- set `stage: building_page:<slug>` before dispatching a page-builder for that page
+- append a page slug to `completed_pages` only after its completion report exists
+- append a page slug to `failed_pages` only if the page could not be completed cleanly
+- set `stage: pages_built` after all requested pages complete
+- set `stage: validated` after validation passes
+- set `stage: blocked` if progress cannot continue without intervention
+- update `last_action` and `last_updated_at` whenever state changes
+
+### Required Sidecar Reports
+Maintain these files where applicable:
+- `.site/bootstrap-report.md`
+- `.site/validation-report.md`
+
+#### `.site/bootstrap-report.md` format
+
+```markdown
+# Bootstrap Report
+
+**Tech Stack**: {tech_stack}
+**Strategy**: {in-place | staging}
+**Completed**: {ISO date}
+
+## Actions Taken
+- {action}
+- {action}
+
+## Files Created or Normalized
+- `{path}` — {reason}
+
+## Residue Scan
+- README residue: {passed | warning | failed}
+- Package name residue: {passed | warning | failed}
+- Helper directory residue: {passed | warning | failed}
+- Starter page residue: {passed | warning | failed}
+
+## Notes
+- {important note}
+```
+
+#### `.site/validation-report.md` format
+
+```markdown
+# Validation Report
+
+**Checked**: {ISO date}
+**Requested Scope**: {page or all pages}
+
+## Build Verification
+- Build command: `{command}`
+- Result: {passed | failed}
+
+## Residue Scan
+- README residue: {passed | warning | failed}
+- Package name residue: {passed | warning | failed}
+- Helper directory residue: {passed | warning | failed}
+- Starter page residue: {passed | warning | failed}
+
+## Page Coverage
+- Requested pages: {list}
+- Built pages: {list}
+- Missing completion reports: {list or none}
+
+## Content Quality
+- Lorem ipsum: {not found | found}
+- Weak filler: {not found | found}
+- Seeded-demo coherence: {passed | warning | failed}
+
+## Outcome
+- Status: {passed | warning | failed}
+- Next step: {short recommendation}
+```
+
+
+## Mode: --update
+
+If `--update` is present:
+
+1. Scan `content/` for user-updated files.
+2. Read completion reports to determine built pages.
+3. For each built page with content changes, dispatch one sub-agent to update content only.
+4. Do **not** change structure, layout, component hierarchy, or visual language.
+5. After updates, dispatch the validation agent.
+
+### Content Update Agent Rules
+
+Use a sub-agent prompt with these rules:
+
 ```text
 You are updating content on an existing website page.
 
-## Rules
-- ONLY replace placeholder text and images with the real content provided
-- Do NOT change any layout, styling, structure, or design
-- Do NOT add new sections or remove existing ones
-- Preserve all CSS classes, HTML structure, and component architecture
-- If a content file is empty or unchanged from placeholder, skip it
+Rules:
+- Only replace content that now has better source material.
+- Preserve layout, structure, styling, and existing component boundaries.
+- Preserve seeded-demo content where no real content has been supplied.
+- Do not redesign the page.
+- Do not change shared design tokens.
 
-## Page to update: {page_name}
-## Page file(s): {file_paths}
-## Content source: {content_directory_path}
-
-## Content mapping:
-{mapping of content files to page sections}
-
-## Design tokens (for reference only — do not change):
-{paste relevant design tokens}
+Inputs you must use:
+- Page name and file path(s)
+- Content mapping
+- Current content states per section: real / seeded-demo / placeholder-minimal
+- Relevant design tokens for reference only
 ```
 
-Skip to "Build Verification" section after content updates are done.
+Then continue to **Validation Stage**.
 
 ## Mode: Regular Build
 
-### Phase 1: Project Initialization (First Build Only)
+## Stage 1 — Discovery / Plan Check
 
-Check if the website project has been initialized (e.g., `package.json` or `index.html` exists in the project root or `src/` directory).
+1. Determine requested scope:
+   - next page
+   - specific page
+   - all remaining pages
+2. Read relevant `.site/page-spec-{slug}.md` files.
+3. Inspect existing build state from completion reports.
+4. Determine whether this is:
+   - fresh build
+   - resume build
+   - rebuild of a specific page
+5. Determine project type:
+   - Astro + Tailwind
+   - HTML + Tailwind
 
-If NOT initialized:
+## Stage 2 — Environment Setup Agent
 
-#### For Astro + Tailwind projects (`tech_stack: "astro-tailwind"` in config):
+Dispatch a dedicated setup sub-agent before any bootstrap or page generation.
 
-Dispatch an initialization sub-agent:
+### Setup Agent Responsibilities
+- Check required tooling for the chosen stack
+- Inspect the target directory state
+- Detect whether the project is already bootstrapped
+- Decide bootstrap strategy
+- Record findings for the orchestrator
 
-```text
-You are setting up a new Astro website project with Tailwind CSS.
+### Setup Agent Constraints
+- Must not create page files
+- Must not install unrelated tools
+- Must not improvise a copy-then-cleanup project migration flow
 
-## Project: {project_name}
-## Directory: {project_directory}
-
-## Setup Steps
-
-1. Initialize Astro project:
-   - Run `npm create astro@latest . -- --template minimal --no-install --no-git --typescript relaxed`
-   - Run `npx astro add tailwind --yes`
-   - Run `npm install`
-
-2. Configure Tailwind with custom design tokens:
-   {paste complete design-tokens.md — colors, typography, spacing}
-
-3. Create base layout component at `src/layouts/BaseLayout.astro`:
-   - HTML document structure with lang, meta tags, font imports
-   - Responsive viewport meta
-   - Global styles
-   - Slot for page content
-
-4. Create shared components:
-   - `src/components/Header.astro` — Navigation bar
-     - Navigation items: {nav items from blueprint}
-     - Style: {nav style from blueprint — fixed/sticky, transparent/solid}
-     - Mobile: hamburger menu with slide-out panel
-   - `src/components/Footer.astro` — Footer
-     - Content: {footer content from blueprint}
-     - Style: {footer style from blueprint}
-
-5. Create content collection schema (if applicable):
-   - Define content types in `src/content/config.ts`
-
-## Design Tokens (MUST apply these exactly):
-{paste FULL design-tokens.md content}
-
-## Nav Items:
-{from content/shared/navigation.md or blueprint}
-
-## Footer Content:
-{from content/shared/footer.md or blueprint}
-
-## Key Constraints:
-- All text must support both Chinese and English characters
-- Must be fully responsive (mobile-first)
-- Use Google Fonts for custom typography — include proper font imports
-- Follow Tailwind best practices — utility-first, no custom CSS unless absolutely necessary
-```
-
-#### For HTML + Tailwind projects (`tech_stack: "html-tailwind"` in config):
-
-Dispatch an initialization sub-agent:
+### Setup Agent Prompt Requirements
 
 ```text
-You are setting up a simple static website with HTML and Tailwind CSS via CDN.
+You are the environment setup agent for a static website project.
 
-## Project: {project_name}
-## Directory: {project_directory}
+Your job:
+1. Inspect the target directory.
+2. Determine whether the project is already bootstrapped.
+3. Verify framework prerequisites.
+4. Decide whether bootstrap is needed.
+5. Report findings clearly.
 
-## Setup Steps
-
-1. Create project structure:
-   ```
-   /
-   ├── index.html
-   ├── css/
-   │   └── custom.css (minimal, only for things Tailwind can't do)
-   ├── js/
-   │   └── main.js (minimal, only for interactive elements)
-   └── images/
-   ```
-
-2. Create base HTML template with:
-   - Tailwind CSS CDN with custom config script
-   - Google Fonts import
-   - Responsive viewport meta
-   - Navigation header (shared across pages if multi-page)
-   - Footer (shared across pages)
-
-## Design Tokens (inject into Tailwind config):
-{paste FULL design-tokens.md}
-
-## Key Constraints:
-- Use Tailwind Play CDN with inline config for custom colors/fonts
-- No build step required — pure static files
-- Mobile-first responsive design
+Rules:
+- Do not build any page.
+- Do not create reusable site sections.
+- Do not move project files between directories.
+- If temporary staging seems necessary, recommend it explicitly instead of improvising it.
 ```
 
-### Phase 2: Page Build Loop
+If setup says bootstrap is not needed, skip to Stage 4.
 
-Determine which pages to build based on the argument and build order from `.site/site-blueprint.md`.
+## Stage 3 — Bootstrap Agent
 
-**CRITICAL: Build pages sequentially, NOT in parallel.** Later pages may reuse components or patterns established in earlier pages.
+If the project is not initialized, dispatch a dedicated bootstrap sub-agent.
 
-For each page to build:
+### Default Bootstrap Strategy
+Use **deterministic in-place bootstrap**.
 
-#### Step 2.1: Prepare Page Context
+That means:
+- initialize directly in the final project root
+- normalize starter output immediately
+- finish bootstrap with a residue scan before any page build begins
 
-1. Read `.site/page-spec-{slug}.md` for detailed page specification
-2. Read `.site/design-tokens.md` for design system
-3. Check `content/{NN}-{page-name}/` for any user-provided real content
-4. If this is NOT the first page, scan existing pages for established patterns:
-   - Use Glob to find component files
-   - Read 1-2 existing page files to extract coding patterns
-5. Read previous page completion reports (if any) for context
+### Forbidden Bootstrap Behavior
+- Do not scaffold into hidden helper directories and then copy everything into root.
+- Do not rely on a final `rm -rf` cleanup step.
+- Do not leave starter metadata in place for later cleanup.
+- Do not let page-builder fix bootstrap leftovers.
 
-#### Step 2.2: Construct Page Builder Prompt
+### Allowed Fallback Strategy
+Only if in-place bootstrap is clearly blocked, use staging under:
+- `.site/bootstrap-work/`
 
-**THIS IS THE MOST CRITICAL STEP.** The sub-agent's output quality is directly proportional to prompt quality.
+If staging is used:
+- only copy a whitelisted final file set into root
+- never copy the entire scaffold tree blindly
+- treat staging as internal implementation detail
 
-Build the prompt using this template:
+### Astro Bootstrap Agent Prompt Requirements
 
 ```text
-You are building a page for the {project_name} website.
+You are bootstrapping a new Astro + Tailwind website project.
 
-## Project Context
+Goal:
+Create a clean project in the final root directory, then normalize it immediately.
 
-**Project**: {project_name}
-**Tech Stack**: {tech_stack}
-**Design Style**: {design_style_description}
-**Your Task**: Build the "{page_name}" page
+Required steps:
+1. Initialize Astro in the target root.
+2. Add Tailwind and install dependencies.
+3. Create shared foundation files:
+   - src/layouts/BaseLayout.astro
+   - shared header/footer/navigation components
+   - shared content loading utilities if needed
+4. Normalize starter output immediately:
+   - replace starter package naming
+   - replace starter README if present
+   - remove or rewrite starter-only pages/files
+   - ensure no .astro-starter or similar residue remains
+5. Produce a bootstrap report.
 
-## MANDATORY: Read These Documents First
-
-Read these files IN ORDER before writing any code:
-
-1. `.site/page-spec-{slug}.md` — Your detailed page specification
-2. `.site/design-tokens.md` — Design system (colors, fonts, spacing)
-3. `.site/site-blueprint.md` — Overall site structure
-
-{if existing_pages}
-4. Study these existing files for coding patterns:
-   {list of existing page/component files with explanations}
-{endif}
-
-## Design Tokens (COMPLETE — use these exactly)
-
-{paste FULL design-tokens.md content — do NOT just reference the file}
-
-## Page Specification (COMPLETE)
-
-{paste FULL page-spec-{slug}.md content}
-
-## Content to Use
-
-{For each section, specify:}
-- If user has provided real content in content/{NN}-{page}/: paste it
-- If no real content: paste the placeholder content from page-spec
-
-## Content File Mapping
-
-{Map each content slot to its source file in content/ directory, so future --update can find them}
-
-## Implementation Requirements
-
-1. **Responsive Design**: Mobile-first. Test mental model at 375px, 768px, 1024px, 1440px widths.
-2. **Accessibility**: Proper heading hierarchy, alt text for images, sufficient color contrast.
-3. **Performance**: Lazy-load images below the fold. Use appropriate image formats.
-4. **Animations**: {specific animation requirements from page-spec}
-5. **Typography**: Use exact font families and sizes from design tokens. Import Google Fonts if not already imported.
-
-## Coding Standards
-
-{For Astro projects:}
-- Create the page at `src/pages/{slug}.astro`
-- Extract reusable sections as components in `src/components/`
-- Use the BaseLayout component
-- Use Astro's built-in features (no unnecessary JavaScript)
-
-{For HTML projects:}
-- Create `{slug}.html` in the project root
-- Reuse the HTML template structure from index.html
-- Keep JavaScript minimal — only for essential interactions (mobile menu, scroll animations)
-
-## Visual Quality Bar
-
-- The page MUST look like a professionally designed website
-- Use proper visual hierarchy — clear H1 → H2 → body text progression
-- Ensure adequate white space between sections
-- Images/gradients should feel intentional, not decorative afterthoughts
-- Interactive elements (buttons, links, cards) must have hover states
-- The design should feel cohesive with other pages on the site
-
-## Self-Review Checklist
-
-Before finishing, verify:
-- [ ] All sections from page-spec are implemented
-- [ ] Design tokens are applied correctly (colors, fonts, spacing)
-- [ ] Page is responsive at all breakpoints
-- [ ] Navigation links work correctly
-- [ ] Content slots match the content file mapping
-- [ ] No placeholder "lorem ipsum" text — use meaningful placeholder content
-- [ ] Hover states and animations work
-- [ ] Page follows the same patterns as existing pages (if any)
-
-## After Completion
-
-Create `.site/page-{slug}-completion-report.md` with:
-- Files created/modified
-- Sections implemented
-- Content sources used (real vs placeholder)
-- Any deviations from spec and why
-- Recommendations for content the user should prioritize replacing
+Rules:
+- Do not use copy-then-rm project migration flows.
+- Do not leave cleanup for later stages.
+- Do not build individual content-heavy pages yet.
+- Stop after shared foundation is ready and residue scan passes.
 ```
 
-#### Step 2.3: Dispatch Page Builder Sub-Agent
+### HTML Bootstrap Agent Prompt Requirements
 
 ```text
-Agent(
-  prompt: <constructed page builder prompt>,
-  description: "Build page: {page_name}",
-  model: "sonnet"
-)
+You are bootstrapping a simple HTML + Tailwind static website.
+
+Goal:
+Create the minimal final project structure directly in root.
+
+Required steps:
+- Create index.html and shared static assets structure
+- Set up Tailwind via CDN
+- Create shared header/footer patterns if multiple pages are planned
+- Apply design tokens
+- Produce a bootstrap report
+
+Rules:
+- Keep the structure minimal and final
+- Do not create throwaway staging folders unless explicitly required
 ```
 
-Use `model: "sonnet"` by default. Use `"opus"` only for the homepage (most complex) or after a sonnet attempt fails.
+### Residue Scan Gate
 
-#### Step 2.4: Validate Page Build
+After bootstrap, inspect for residue before allowing any page build.
 
-After sub-agent returns:
+Examples of residue warnings:
+- default Astro starter README still present
+- starter `package.json.name`
+- helper directories like `.astro-starter/`
+- untouched starter `src/pages/index.astro`
 
-1. Read the generated page file(s) — verify they exist
-2. Check that page uses design tokens correctly (spot-check a few Tailwind classes)
-3. Verify responsive classes are present (look for `md:` and `lg:` prefixes)
-4. Read `.site/page-{slug}-completion-report.md`
-5. Update `.site/config.json`: increment `current_page`
+If residue is found, fix it before continuing.
 
-#### Step 2.5: Handle Issues
+## Stage 4 — Page Build Loop
 
-- **Minor issues** (missing hover state, wrong color): Fix directly
-- **Major issues** (broken layout, missing sections): Re-dispatch with more specific prompt
-- **Missing dependencies** (component not found): Create the component and re-dispatch
+Build pages **sequentially**, never in parallel. Later pages may reuse patterns established earlier.
 
-#### Step 2.6: Report Progress
+For each page:
 
-Output a friendly progress update:
+### Step 4.1 — Prepare Context
 
+1. Read `.site/page-spec-{slug}.md`
+2. Read `.site/design-tokens.md`
+3. Read `.site/site-blueprint.md`
+4. Read `.site/content-guide.md` if present
+5. Check `content/{NN}-{page-name}/` for user content
+6. Read 1-2 existing pages/components for established patterns if this is not the first page
+7. Read previous completion reports if relevant
+
+### Step 4.2 — Build Structured Inputs
+
+Construct a page-builder prompt that explicitly provides:
+- project name
+- tech stack
+- complete design tokens
+- complete page specification
+- content mapping
+- section-by-section content state map: `real | seeded-demo | placeholder-minimal`
+- seeded visual archetypes allowed for the page
+- motion token set allowed for the page
+- references to existing patterns
+
+Use this exact input shape inside the prompt:
+
+```text
+Content State Map:
+- Hero:
+  - state: seeded-demo
+  - content_files:
+    - content/01-homepage/hero-title.md
+    - content/01-homepage/hero-description.md
+  - visual_archetype: brand-gradient
+  - motion_tokens:
+    - reveal-soft
+- Logo Strip:
+  - state: placeholder-minimal
+  - content_files:
+    - content/01-homepage/logo-strip.md
+  - visual_archetype: logo-strip-placeholder
+  - motion_tokens:
+    - stagger-cards
+- Features:
+  - state: real
+  - content_files:
+    - content/01-homepage/feature-1.md
+    - content/01-homepage/feature-2.md
+  - visual_archetype: none
+  - motion_tokens:
+    - hover-lift
 ```
-✓ {Page Name} page is ready!
-  - Sections: {list of sections built}
-  - Content: {real / placeholder}
-  - Files: {list of files created}
 
-{if more pages remain}
-Next up: {next page name}
-Continue? (y/n)
-{endif}
+If a section has no real image, the orchestrator must still provide one approved `visual_archetype` or explicitly set it to `none`.
+
+
+### Step 4.3 — Page Builder Agent Rules
+
+The page builder sub-agent must:
+- build only the requested page
+- use `real` content when provided
+- otherwise use `seeded-demo` content by default
+- only fall back to `placeholder-minimal` if necessary
+- use approved visual archetypes for missing images
+- use only approved motion tokens
+- create/update the page completion report
+
+## Seeded Demo Content Policy
+
+This workflow defaults to `demo-ready` output.
+
+That means when real content is missing, the built pages should still feel close to a finished website.
+
+### Text Seeding
+Use industry-aware seeded content that is:
+- specific enough to feel intentional
+- internally consistent across pages
+- safe for demos
+- never lorem ipsum
+- never fake real customer claims presented as fact
+
+### Visual Seeding
+Prefer designed placeholder archetypes over empty boxes or generic gradients alone.
+
+Examples:
+- brand-gradient
+- dashboard-mockup
+- team-silhouette-panel
+- abstract-office-scene
+- device-frame
+- metric-card-cluster
+- logo-strip-placeholder
+- case-study-cover-panel
+
+### Motion Seeding
+Use motion tokens defined in design tokens, for example:
+- reveal-soft
+- hover-lift
+- border-glow
+- stagger-cards
+- panel-parallax-lite
+
+Do not improvise unrelated animation systems.
+
+## Stage 5 — Validation Agent
+
+Always finish a build or update run with a validation sub-agent.
+
+### Validation Agent Responsibilities
+- run build verification
+- scan for starter residue
+- verify all requested pages exist
+- verify completion reports exist
+- check content quality:
+  - no lorem ipsum
+  - no generic “your company” filler unless explicitly requested
+  - seeded-demo coverage is coherent
+- report next actions clearly
+
+### Validation Agent Prompt Requirements
+
+```text
+You are the validation agent for a generated static website.
+
+Your job:
+1. Verify the requested pages were built.
+2. Run the appropriate build check.
+3. Scan for starter residue and unfinished scaffold artifacts.
+4. Review content quality and content-state usage.
+5. Produce a concise validation report.
+
+Check specifically for:
+- starter README remnants
+- starter package naming
+- helper scaffold folders
+- missing completion reports
+- sections still using weak placeholders instead of seeded-demo content
 ```
 
-### Phase 3: Build Verification
+## Required Reports
 
-After all pages are built (or after --update):
+Maintain these artifacts where applicable:
+- `.site/workflow-state.json`
+- `.site/bootstrap-report.md`
+- `.site/page-{slug}-completion-report.md`
+- `.site/validation-report.md`
 
-1. For Astro projects: Run `npx astro build` and check for errors
-2. For HTML projects: Verify all internal links point to existing files
-3. Fix any build errors
+## User Communication Rules
 
-### Phase 4: Completion
-
-When all pages are built:
-
-1. Update `.site/config.json`: set `status` to "built"
-2. Output completion summary:
-
-```
-Your website is ready! 🎉
-
-Pages built:
-  ✓ Homepage
-  ✓ About
-  ✓ Services
-  ✓ Contact
-
-Content status:
-  - 3 pages using placeholder content
-  - 1 page with your real content
-
-Next steps:
-  1. Run /site-preview to see your website in the browser
-  2. Update content in the content/ folder, then run /site-build --update
-  3. When you're happy with everything, your site is ready to publish!
-```
-
-## Key Principles
-
-- Each page-builder sub-agent gets clean context — this is by design
-- The prompt IS the sub-agent's entire knowledge — include everything it needs
-- If a page build fails, make the prompt more specific
-- Always paste full design tokens in the prompt — never just reference the file
-- Maintain visual consistency across pages by sharing pattern references
-- Build global components (nav, footer, layout) FIRST before any pages
+- Keep the user-facing summary short and non-technical.
+- Tell the user what stage is happening now.
+- If blocked, explain exactly what is blocked.
+- When build work completes, summarize:
+  - pages built or updated
+  - whether residue scan passed
+  - whether the site is ready for preview

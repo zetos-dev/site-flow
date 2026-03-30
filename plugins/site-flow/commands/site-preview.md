@@ -1,156 +1,134 @@
 ---
-description: "Preview your website in the browser and make adjustments based on feedback"
+description: "Preview your website in the browser and make focused adjustments based on feedback"
 argument-hint: ""
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion]
 ---
 
 # /site-preview — Preview & Iterate
 
-You are helping a non-technical user preview their website and make adjustments based on their feedback.
+You are helping a non-technical user preview their website and make adjustments based on feedback.
 
 ## Pre-check
 
-1. Read `.site/config.json` — if missing, tell user to run `/site-init` first
-2. Check that at least one page has been built (status is "built" or "building", or page completion reports exist)
-3. If no pages built, tell user to run `/site-build` first
+1. Read `.site/config.json` — if missing, tell the user to run `/site-init` first.
+2. Read `.site/workflow-state.json` if present.
+3. Check that at least one page has been built.
+4. If no pages are built, tell the user to run `/site-build` first.
 
-## Phase 1: Start Development Server
+## Phase 1 — Start Preview Server
 
-### For Astro projects:
+### For Astro projects
+Run in the background:
 
 ```bash
 npx astro dev
 ```
 
-Run this in the background. Tell the user:
-
-```
-Your website is now running! Open your browser and go to:
-
-  http://localhost:4321
-
-Take a look around and let me know what you think. I can help you adjust:
-  - Colors, fonts, or spacing
-  - Layout of any section
-  - Text or images
-  - Animations and effects
-  - Adding or removing sections
-
-When you're done reviewing, just let me know!
-```
-
-### For HTML projects:
+### For HTML projects
+Run in the background:
 
 ```bash
 npx serve .
 ```
 
-Or use Python's built-in server:
+Fallback:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Run in the background and tell the user the URL.
+Then tell the user where to open the site.
 
-## Phase 2: Collect Feedback
+## Phase 2 — Frame the Preview Clearly
 
-Use `AskUserQuestion` to gather structured feedback:
+Before asking for feedback, explain the current content state in plain language.
 
-**Question 1 — Overall Impression**:
-- Header: "First Look"
-- Question: "How does the website look overall?"
-- Options:
-  - "Looks great! Just minor tweaks needed" — Small adjustments to colors, spacing, or text
-  - "Good direction, but some sections need work" — Specific areas need redesign or restructuring
-  - "Not quite right, needs significant changes" — Major design direction or layout changes needed
-  - "Love it, no changes needed!" — Ready to move on
+If the site is using seeded demo content, say so clearly:
+- some text is polished demo content
+- some visuals may be designed placeholders
+- this is intentional so the user can judge the design before gathering every final asset
 
-If user selects "Love it", skip to Phase 4.
+If `.site/validation-report.md` exists, summarize any active warnings.
 
-**Question 2 — Specific Feedback** (if changes needed):
-- Header: "What to Fix"
-- multiSelect: true
-- Question: "What would you like to adjust? (Select all that apply)"
-- Options:
-  - "Colors or visual style" — Change color scheme, contrast, or mood
-  - "Layout or structure" — Move sections, change column layouts, resize areas
-  - "Text content" — Update headlines, descriptions, or other text
-  - "Images or visual elements" — Change backgrounds, add/remove images
-- Allow "Other" for specific requests
+## Phase 3 — Collect Structured Feedback
 
-Then ask a follow-up free-text question (via AskUserQuestion "Other" option or direct conversation):
-- "Can you describe what you'd like changed? For example: 'Make the top section taller', 'Use darker colors', 'Move the contact info higher'"
+Use `AskUserQuestion`.
 
-## Phase 3: Apply Changes
+### Question 1 — Overall Impression
+- Looks great, only small tweaks
+- Good direction, some sections need work
+- Not quite right, needs bigger changes
+- Love it, ready to move on
 
-Based on user feedback:
+If the user loves it, skip to finalization.
 
-1. Read the relevant page file(s)
-2. Read `.site/design-tokens.md` for current design system
-3. Make the requested changes directly (for small changes) or dispatch a sub-agent (for larger changes)
+### Question 2 — What Kind of Changes?
+Use multi-select:
+- Colors or visual style
+- Layout or section structure
+- Text tone or wording
+- Images or visual placeholders
+- Motion or interaction feel
 
-### For small changes (color tweaks, text updates, spacing):
-- Edit the files directly using the Edit tool
-- These are quick fixes that don't need a sub-agent
+Then ask for short free-text clarification if needed.
 
-### For larger changes (layout restructuring, new sections, style overhaul):
-Dispatch a sub-agent with specific instructions:
+## Phase 4 — Apply Changes
 
-```text
-You are making design adjustments to the {page_name} page of the {project_name} website.
+For small changes:
+- edit directly
 
-## Current Page File: {file_path}
-## Design Tokens: {paste design-tokens.md}
+For larger changes:
+- dispatch a focused sub-agent
 
-## User Feedback:
-{user's specific feedback}
+### Large-change sub-agent rules
+Provide:
+- current page file(s)
+- current design tokens
+- user feedback
+- whether the affected content is real, seeded-demo, or placeholder-minimal
 
-## Changes Required:
-{translated into specific technical changes}
+Rules:
+- preserve unaffected content and structure
+- do not redesign unrelated sections
+- keep responsive behavior intact
+- keep within approved motion/design system unless the user explicitly wants a broader restyle
 
-## Rules:
-- Preserve all existing content unless the user asked to change it
-- Maintain responsive behavior
-- Keep design token compliance
-- Only change what was requested — do not "improve" other areas
-```
+## Phase 5 — Feedback Loop
 
-After making changes, tell the user:
+Keep iteration quick:
+1. apply change
+2. tell the user to refresh
+3. ask if the result is closer
 
-```
-Changes applied! Refresh your browser to see the updates.
+When discussing content, distinguish clearly between:
+- changing the design direction
+- refining seeded demo content
+- replacing with real user content/assets
 
-Want to adjust anything else, or does it look good?
-```
-
-### Feedback Loop
-
-Repeat Phase 2-3 until the user is satisfied. Keep iterations quick and focused.
-
-## Phase 4: Finalize
+## Phase 6 — Finalize
 
 When the user is happy:
+1. update managed state to reflect review completion
+2. mention that demo-ready content can be replaced later via `content/` and `/site-build --update`
+3. ask whether to keep the preview server running
 
-1. Update `.site/config.json`: set `status` to "reviewed"
-2. If the dev server is still running, ask if they want to keep it running
+Output guidance like:
 
-Output:
+```text
+Your site is in good shape.
 
-```
-Great, your website looks good!
+You can keep refining it in two ways:
+- adjust design/layout
+- replace demo content with your real text and images
 
-Next steps:
-  - To update content later, edit files in the content/ folder and run /site-build --update
-  - Your website files are ready to publish to any web hosting service
-  - Common options: Netlify, Vercel, GitHub Pages, or any static hosting
-
-Need help with publishing? Just ask!
+When you update files in content/, run:
+  /site-build --update
 ```
 
 ## Key Principles
 
-- Keep feedback loops SHORT — make changes quickly, let user see results fast
-- Don't over-interpret feedback — if user says "darker", make it darker. Don't redesign the whole page.
-- Always preserve content the user didn't mention
-- Use everyday language in all communication
+- Keep feedback loops short.
+- Use everyday language.
+- Don’t over-interpret vague feedback.
+- Preserve user-approved design direction.
+- Make demo-ready content feel like a feature, not an apology.
