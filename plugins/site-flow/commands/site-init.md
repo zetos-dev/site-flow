@@ -18,6 +18,8 @@ Default behavior:
 - use `demo-ready` seeded content unless the user clearly wants sparse placeholders
 - prefer real-looking default imagery first: stock-library for most sections, AI-generated images for key visuals when available, and designed placeholders only as fallback
 - make the generated plan coherent enough that `/site-build` can produce polished pages without asking for lots of materials first
+- require visual richness: imagery, motion, hierarchy, depth, and deliberate composition should make the site feel like a finished design, not a scaffold
+- treat gradient placeholder boxes and empty visual frames as failure states for design-heavy sections unless the page spec explicitly allows an abstract finished graphic treatment
 
 ## Pre-check: Existing Project
 
@@ -144,6 +146,17 @@ Use this exact structure:
     "next_step": "",
     "resume_command": "/site-build"
   },
+  "delegation": {
+    "policy": "required-non-environment",
+    "last_agent": null,
+    "stage_agents": {
+      "bootstrap": null,
+      "page_build": [],
+      "content_update": [],
+      "validation": null
+    },
+    "main_session_execution_violations": []
+  },
   "last_action": "project initialized",
   "last_updated_at": "<ISO date>",
   "residue_checks": {
@@ -177,12 +190,12 @@ Allowed `stage` values:
 - While checking local requirements: `environment_checking`
 - If required tools are missing: `environment_blocked`
 - After setup confirms readiness: `environment_ready`
-- After bootstrap finishes and residue scan passes: `bootstrapped`
+- After bootstrap finishes, residue scan passes, and the bootstrap report confirms sub-agent execution: `bootstrapped`
 - While building a page: `building_page:<slug>`
-- After all requested pages are built: `pages_built`
-- After validation passes: `validated`
+- After all requested pages are built and each completion report confirms sub-agent execution: `pages_built`
+- After validation passes and the validation report confirms sub-agent execution: `validated`
 - After preview/review approval: `reviewed`
-- If a non-environment blocking error prevents progress: `blocked`
+- If a non-environment blocking error prevents progress or delegation policy is violated: `blocked`
 
 ### Update rules
 - `current_target` should contain the active page slug during page build, otherwise `null`
@@ -192,6 +205,10 @@ Allowed `stage` values:
 - `environment_readiness.missing` should list missing tools like `node`, `npm`, or `npx`
 - `environment_readiness.next_step` should be a plain-language next action for the user
 - `environment_readiness.resume_command` should usually be `/site-build`
+- `delegation.policy` should be `required-non-environment`
+- `delegation.last_agent` should record the most recent executor agent
+- `delegation.stage_agents` should record bootstrap, page, update, and validation agents used
+- `delegation.main_session_execution_violations` should record any forbidden main-session execution
 - `last_action` should be a short human-readable summary
 - `last_updated_at` must be refreshed whenever the file changes
 - `residue_checks.status`: `pending | passed | warning | failed`
@@ -241,6 +258,8 @@ Also explain:
 - which sections can safely use stock imagery first
 - which sections should prefer AI-generated hero/key-visual treatment
 - that the site can be previewed before all materials are ready
+- that this workflow aims for a visually complete website, not a placeholder scaffold
+- that designed placeholders must still feel intentional and finished, not like blank gradient boxes
 
 ### 3g. Create `.site/page-spec-{slug}.md`
 Each page spec must include:
@@ -250,9 +269,13 @@ Each page spec must include:
 - content requirements by section
 - content state defaults by section
 - image source preference by section
+- visual requirement by section: `required | recommended | optional`
+- imagery kind by section: `photo | illustration | abstract-brand-graphic | logo-strip | ui-mockup`
+- whether placeholders are allowed and at what cap
 - allowed visual archetypes only as fallback for image-heavy sections
 - allowed motion tokens for the page
 - accessibility / responsiveness notes
+- finish cues for how the page should feel visually complete
 
 Use this structure:
 
@@ -269,6 +292,11 @@ Use this structure:
 1. {Section Name}
 2. {Section Name}
 
+## Finish Cues
+- Above-the-fold impression: {finished / editorial / premium / energetic / calm / bold}
+- Required design elements: {imagery, motion, proof elements, layered composition, etc.}
+- Failure states to avoid: {wireframe look, empty visual boxes, generic gradient slabs}
+
 ## Section Requirements
 
 ### {Section Name}
@@ -277,7 +305,11 @@ Use this structure:
 - Content files:
   - `content/{NN}-{page}/...`
 - Default content state: `real | seeded-demo | placeholder-minimal`
+- Visual requirement: `required | recommended | optional`
+- Imagery kind: `photo | illustration | abstract-brand-graphic | logo-strip | ui-mockup`
 - Image source preference: `real-user-assets | stock-library | ai-generated | designed-placeholder`
+- Placeholder allowed: `yes | no`
+- Placeholder cap: `none | temporary | final-allowed`
 - Allowed visual archetypes (fallback only): {list}
 - Allowed motion tokens: {list}
 - Notes: {accessibility / responsive notes}
@@ -325,6 +357,12 @@ For pages with strong brand impact, plan a hybrid default:
 - hero / key visual / case-study cover: prefer `ai-generated`
 - ordinary supporting sections: prefer `stock-library`
 - use `designed-placeholder` only when the earlier sources are unavailable
+
+Design rule:
+- a deliberate graphic composition can count as complete
+- a blank gradient rectangle or empty frame cannot
+
+The planning outputs should set `/site-build` up to produce a visually rich site with imagery, motion, hierarchy, and polish rather than a basic shell.
 
 ### Motion
 Define a restrained motion system using named tokens such as:

@@ -46,6 +46,9 @@ Determine:
 - whether residue warnings exist
 - whether validation passed
 - content readiness by page
+- whether delegation policy was followed
+- whether any main-session execution violations were recorded
+- whether the site is visually finish-ready or still scaffold-like
 
 When possible, summarize content states using:
 - `real`
@@ -56,7 +59,9 @@ Also summarize visual readiness where possible:
 - real user images
 - stock-library images
 - AI-generated images
-- designed placeholders
+- designed graphics
+- placeholder-minimal debt
+- design richness blockers
 
 ### 3. Display Overview
 
@@ -69,17 +74,19 @@ Tech: {friendly tech stack}
 Stage: {workflow stage}
 Environment: {ready / needs setup / not checked yet}
 Missing tools: {none / Node.js / npm / npx}
+Delegation: {compliant / violation found / not recorded yet}
 
 Progress: [{progress_bar}] {built_pages}/{total_pages} pages
 Bootstrap: {complete / pending}
 Residue Check: {passed / warning}
 Validation: {passed / pending / needs fixes}
+Finish Readiness: {ready / close / not ready}
 
-| Page     | Status    | Content Mix                     |
-|----------|-----------|---------------------------------|
-| Homepage | ✓ Built   | seeded-demo + stock/AI imagery  |
-| About    | ✓ Built   | real + seeded-demo              |
-| Services | ◻ Pending | not built yet                   |
+| Page     | Status    | Content Mix                     | Visual Finish |
+|----------|-----------|---------------------------------|---------------|
+| Homepage | ✓ Built   | seeded-demo + stock/AI imagery  | strong        |
+| About    | ✓ Built   | real + seeded-demo              | warning       |
+| Services | ◻ Pending | not built yet                   | pending       |
 
 Content Readiness:
 - Real content: {summary}
@@ -90,7 +97,13 @@ Image Readiness:
 - User images: {summary}
 - Stock images: {summary}
 - AI-generated images: {summary}
-- Designed placeholders: {summary}
+- Designed graphics: {summary}
+- Placeholder debt: {summary}
+
+Design Richness:
+- Motion & interaction polish: {summary}
+- Scaffold-like sections: {summary}
+- Main blockers: {summary}
 
 Next Step:
 - {most useful next command or install action}
@@ -110,6 +123,7 @@ Show:
 - content state by section
 - what kind of imagery is being used
 - whether real images are present
+- whether the page still has placeholder debt or scaffold-like sections
 - what should be replaced next for best impact
 
 Example:
@@ -120,10 +134,10 @@ Status: Built
 Built on: {date}
 
 Sections:
-- Hero — seeded-demo text, AI-generated hero visual
-- Trust Strip — placeholder-minimal logos
+- Hero — seeded-demo text, AI-generated hero visual, polished motion
+- Trust Strip — placeholder-minimal logos, needs real brand marks
 - Features — seeded-demo with stock imagery
-- CTA — seeded-demo
+- CTA — seeded-demo, finished visual treatment
 
 Best Next Replacements:
 - Real hero image or brand photography
@@ -137,4 +151,6 @@ Best Next Replacements:
 - Focus on what the user should do next.
 - Prefer actual file signals over stale status flags.
 - Call out starter residue warnings clearly if any remain.
-- Make it obvious that demo-ready content is intentional and can be swapped later.
+- Call out delegation violations clearly if any exist.
+- Treat gradient-box visuals, empty frames, and wireframe-like sections as unfinished design debt.
+- Make it obvious that demo-ready content is intentional and can be swapped later, while unfinished design output is not acceptable final quality.

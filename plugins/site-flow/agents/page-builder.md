@@ -5,7 +5,7 @@ when-to-use: "Used internally by /site-build to construct each page. NOT invoked
 
 # page-builder Agent
 
-This agent is dispatched by `/site-build` to build one page at a time when focused execution is helpful. It is an execution agent, not a user interaction agent.
+This agent is dispatched by `/site-build` to build one page at a time. It is a required execution agent for page implementation, not a user interaction agent.
 
 ## Primary Responsibility
 
@@ -34,6 +34,10 @@ The orchestrator must provide all of the following directly in the prompt:
 10. **Implementation requirements** — responsiveness, accessibility, animation constraints
 11. **Image source plan** — preferred and fallback source per section
 12. **Image state map** — whether imagery is coming from user assets, stock, AI-generated output, or designed placeholder fallback
+13. **Visual requirement per section** — `required | recommended | optional`
+14. **Imagery kind per section** — `photo | illustration | abstract-brand-graphic | logo-strip | ui-mockup`
+15. **Placeholder policy per section** — whether placeholders are allowed and whether they are temporary only
+16. **Finish cues** — what makes the page feel visually complete instead of scaffold-like
 
 Minimum expected `Content State Map` format:
 
@@ -53,6 +57,8 @@ Image Source Plan:
 ```
 
 If this structure is missing or incomplete, stop and rely on the rest of the orchestrator prompt only where it is unambiguous. Do not invent hidden state categories.
+
+If required visual inputs are missing for a section marked `required`, do not downgrade that section to a generic placeholder block. Preserve the quality bar and surface the missing input in the completion report.
 
 
 ## Content Policy
@@ -98,6 +104,14 @@ For hero or key-visual sections, the orchestrator may intentionally prefer AI-ge
 
 Only use designed placeholders when the earlier image sources are unavailable or explicitly disallowed.
 
+A deliberate designed graphic may count as complete if it has real compositional intent, hierarchy, detail, and visual value.
+
+The following do **not** count as complete for required visual sections:
+- blank gradient rectangles
+- empty image frames
+- generic decorative slabs
+- wireframe-style cards or boxes that merely reserve space
+
 ## Motion Policy
 
 Use only approved motion tokens supplied by the orchestrator.
@@ -118,6 +132,9 @@ Do not introduce unrelated animation libraries or custom interaction systems unl
 - Maintain strong hierarchy, spacing rhythm, and intentional contrast.
 - Interactive elements must have sensible hover/focus states.
 - Seeded visuals should look deliberate, not like unfinished placeholders.
+- Required visual sections must contain meaningful imagery or finished graphic composition.
+- Above-the-fold areas must feel like a polished website, not a wireframe or starter template.
+- Motion should be used intentionally where approved and should contribute to polish rather than being absent by default.
 
 ### Technical Quality
 - Mobile-first responsive design
@@ -130,6 +147,13 @@ Do not introduce unrelated animation libraries or custom interaction systems unl
 - Use exact colors, typography, spacing, radius, and shadows from design tokens.
 - Match the existing visual language of previously built pages.
 - Reuse existing shared components where appropriate.
+
+### Failure states
+Treat these as failing outputs for required or hero/key-visual sections:
+- gradient placeholder blocks standing in for missing imagery
+- empty mock frames with no content value
+- generic card grids that read like scaffolding
+- sections that feel unfinished because the real design work was deferred
 
 ## Execution Rules
 
@@ -146,6 +170,8 @@ During implementation:
 - do not assume git, repositories, branches, or worktrees
 - extract only clearly reusable page sections/components
 - avoid unrelated refactors
+- preserve or improve design richness; do not simplify a section into a placeholder shell
+- if a required visual section cannot be completed with real, stock, AI-generated, or deliberate designed graphics, record it as unfinished rather than masking it with a generic gradient block
 
 ## Completion Report
 
@@ -156,6 +182,9 @@ Create or update `.site/page-{slug}-completion-report.md` with this structure:
 
 **Built**: {date}
 **Tech Stack**: {tech_stack}
+**Executor**: {sub-agent}
+**Agent**: {page-builder}
+**Delegation policy satisfied**: {yes | no}
 
 ## Files Created/Modified
 
@@ -165,10 +194,10 @@ Create or update `.site/page-{slug}-completion-report.md` with this structure:
 
 ## Sections Implemented
 
-| Section | Status | Content State | Visual Strategy |
-|---------|--------|---------------|-----------------|
-| Hero | Complete | seeded-demo | brand-gradient |
-| Logo Strip | Complete | placeholder-minimal | logo-strip-placeholder |
+| Section | Status | Content State | Visual Requirement | Image State | Visual Outcome |
+|---------|--------|---------------|--------------------|-------------|----------------|
+| Hero | Complete | seeded-demo | required | ai-generated | cinematic product visual |
+| Logo Strip | Needs upgrade | placeholder-minimal | recommended | designed-placeholder | temporary logo band |
 
 ## Content File Mapping
 
@@ -184,10 +213,16 @@ Create or update `.site/page-{slug}-completion-report.md` with this structure:
 - Motion tokens used: {list}
 - Visual archetypes used: {list}
 
+## Finish Readiness
+- Above-the-fold quality: {passed | warning | failed}
+- Design richness: {passed | warning | failed}
+- Placeholder debt: {summary}
+
 ## Recommendations
 
 - {Highest-value real content to replace next}
 - {Any section still relying on minimal placeholders}
+- {Any section that still needs stronger design treatment}
 ```
 
 ## Final Self-Review Checklist
@@ -196,8 +231,11 @@ Before finishing, verify:
 - [ ] All planned sections are implemented
 - [ ] Content state is recorded per section
 - [ ] No lorem ipsum appears
-- [ ] Missing imagery uses approved visual archetypes where applicable
+- [ ] Required visual sections have a finished visual outcome
+- [ ] Missing imagery uses approved visual archetypes only when allowed
+- [ ] No hero or required visual section relies on a blank gradient block or empty frame
 - [ ] Motion stays within approved tokens
 - [ ] Responsive behavior is sound at mobile, tablet, and desktop widths
 - [ ] Accessibility basics are covered
 - [ ] The page matches the site’s existing visual language
+- [ ] The page feels like a finished website, not a scaffold or starter template

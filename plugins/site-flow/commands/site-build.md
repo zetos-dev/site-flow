@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion]
 
 # /site-build — Website Build Orchestrator
 
-You are the **orchestrator** for building a static website. The main conversation must stay lean: you do orchestration, state checks, and user communication. Prefer focused helper sub-agents for large or context-heavy stages, but do not make the workflow depend on git, worktrees, or helper-only execution.
+You are the **orchestrator** for building a static website. The main conversation must stay lean: you do orchestration, environment readiness, dependency installation/setup, state checks, sub-agent dispatch, report aggregation, and user communication. All bootstrap execution, page implementation, content refreshes, design revisions, and validation must run in focused sub-agents. Do not make the workflow depend on git or worktrees.
 
 **Arguments**: $ARGUMENTS
 - No argument: Build the next pending page
@@ -25,7 +25,16 @@ Use staged handoffs:
 4. Page build loop
 5. Validation
 
-Prefer focused helper sub-agents when helpful for isolation, but do not assume git, branches, repositories, or worktrees. The normal workflow must work directly in the current project directory.
+Execution policy:
+- The main session may perform environment readiness, dependency installation/setup, state/report reads and writes, stage selection, and agent dispatch.
+- The main session must not perform bootstrap edits, page implementation, content-only refresh edits, preview-driven design edits, or validation review directly.
+- Stage 3 bootstrap must run in a dedicated bootstrap agent.
+- Stage 4 page work must run in the page-builder agent.
+- `--update` content refreshes must run in a dedicated content-update agent.
+- Stage 5 validation must run in a dedicated validation agent.
+- If a required agent cannot be launched, stop and mark the workflow blocked instead of silently doing the work in the main session.
+
+Do not assume git, branches, repositories, or worktrees. The normal workflow must work directly in the current project directory.
 
 ## Pre-check
 
@@ -57,6 +66,17 @@ Use this structure:
     "next_step": "",
     "resume_command": "/site-build"
   },
+  "delegation": {
+    "policy": "required-non-environment",
+    "last_agent": null,
+    "stage_agents": {
+      "bootstrap": null,
+      "page_build": [],
+      "content_update": [],
+      "validation": null
+    },
+    "main_session_execution_violations": []
+  },
   "last_action": "project initialized",
   "last_updated_at": "<ISO date>",
   "residue_checks": {
@@ -76,13 +96,14 @@ Use this structure:
 - set `stage: environment_checking` while checking local requirements
 - set `stage: environment_blocked` if required tools are missing
 - set `stage: environment_ready` after the readiness check confirms Node.js/npm support for the chosen stack
-- set `stage: bootstrapped` only after bootstrap completes and residue scan passes
+- set `stage: bootstrapped` only after bootstrap completes, residue scan passes, and the bootstrap report records sub-agent execution
 - set `stage: building_page:<slug>` before building that page
-- append a page slug to `completed_pages` only after its completion report exists
+- append a page slug to `completed_pages` only after its completion report exists and records sub-agent execution
 - append a page slug to `failed_pages` only if the page could not be completed cleanly
 - set `stage: pages_built` after all requested pages complete
-- set `stage: validated` after validation passes
-- set `stage: blocked` if progress cannot continue for another non-environment reason
+- set `stage: validated` only after validation passes and the validation report records sub-agent execution
+- set `stage: blocked` if progress cannot continue for another non-environment reason or delegation policy is violated
+- record any non-environment main-session execution in `delegation.main_session_execution_violations`
 - update `environment_readiness.checked_at`, `last_action`, and `last_updated_at` whenever state changes
 
 ### Required Sidecar Reports
@@ -98,6 +119,9 @@ Maintain these files where applicable:
 **Tech Stack**: {tech_stack}
 **Strategy**: {in-place | staging}
 **Completed**: {ISO date}
+**Executor**: {sub-agent}
+**Agent**: {bootstrap-astro | bootstrap-html}
+**Delegation policy satisfied**: {yes | no}
 
 ## Actions Taken
 - {action}
@@ -123,6 +147,9 @@ Maintain these files where applicable:
 
 **Checked**: {ISO date}
 **Requested Scope**: {page or all pages}
+**Executor**: {sub-agent}
+**Agent**: {site-validator}
+**Delegation policy satisfied**: {yes | no}
 
 ## Build Verification
 - Build command: `{command}`
@@ -144,6 +171,26 @@ Maintain these files where applicable:
 - Weak filler: {not found | found}
 - Seeded-demo coherence: {passed | warning | failed}
 
+## Visual Completeness
+- Required visual sections complete: {passed | warning | failed}
+- Hero / key visual quality: {passed | warning | failed}
+- Wireframe-like sections: {not found | found}
+
+## Image Source Coverage
+- Real-user-assets: {summary}
+- Stock-library: {summary}
+- AI-generated: {summary}
+- Designed graphics: {summary}
+- Placeholder-minimal debt: {summary}
+
+## Motion & Interaction Quality
+- Motion expectation: {passed | warning | failed}
+- Interactive polish: {passed | warning | failed}
+
+## Finish Readiness
+- Design richness: {passed | warning | failed}
+- Next visual improvements: {list or none}
+
 ## Outcome
 - Status: {passed | warning | failed}
 - Next step: {short recommendation}
@@ -157,13 +204,13 @@ If `--update` is present:
 1. Run the Environment Readiness stage first.
 2. Scan `content/` for user-updated files.
 3. Read completion reports to determine built pages.
-4. For each built page with content changes, use a focused helper when helpful to update content only.
+4. For each built page with content changes, dispatch a dedicated content-update agent to update content only.
 5. Do **not** change structure, layout, component hierarchy, or visual language.
 6. After updates, run the Validation stage.
 
 ### Content Update Agent Rules
 
-Use a sub-agent prompt with these rules:
+Dispatch `plugins/site-flow/agents/content-updater.md` with these rules:
 
 ```text
 You are updating content on an existing website page.
@@ -174,12 +221,15 @@ Rules:
 - Preserve seeded-demo content where no real content has been supplied.
 - Do not redesign the page.
 - Do not change shared design tokens.
+- Keep the page visually complete after the content swap.
+- Do not regress imagery or motion richness while updating content.
 
 Inputs you must use:
 - Page name and file path(s)
 - Content mapping
 - Current content states per section: real / seeded-demo / placeholder-minimal
 - Relevant design tokens for reference only
+- Current image state and visual strategy per section
 ```
 
 Then continue to **Validation Stage**.
@@ -190,7 +240,7 @@ Then continue to **Validation Stage**.
 
 This stage should happen before bootstrap, page build, update, or preview-oriented commands.
 
-Use a focused helper when helpful, but keep the behavior the same either way.
+This is the only execution stage that may run entirely in the main session.
 
 ### Goals
 - Check whether the current machine is ready for the chosen stack
@@ -202,7 +252,7 @@ Use a focused helper when helpful, but keep the behavior the same either way.
 - Do not assume git, repositories, branches, or worktrees.
 - Do not create worktrees.
 - Do not treat missing worktree support as an error condition.
-- By default, do not run system-level installation commands inside a helper.
+- Do not run system-level installation commands inside a helper.
 - If required tools are missing, stop here and update `.site/workflow-state.json`.
 
 ### Readiness outcomes
@@ -231,23 +281,24 @@ Only after readiness is confirmed should the workflow continue.
    - Astro + Tailwind
    - HTML + Tailwind
 
-### Helper-based readiness check
+### Main-session discovery rules
 
-When helpful, use a focused helper for environment readiness.
+Stage 2 may run in the main session because it is orchestration and planning work only.
 
-That helper should:
+The main session may:
 - inspect the target directory
 - detect whether `node`, `npm`, and when relevant `npx` are available
 - detect whether the project is already bootstrapped
 - explain missing requirements in plain language
-- report whether bootstrap should continue
+- decide which dedicated agent to dispatch next
 
-Helper constraints:
-- must not create page files
-- must not install tools automatically
-- must not create worktrees
-- must not improvise copy-then-cleanup project migration flows
-- must not treat missing git/worktree support as an error
+The main session must not:
+- create page files
+- install tools automatically beyond explicit environment/setup steps already approved by the user
+- create worktrees
+- improvise copy-then-cleanup project migration flows
+- treat missing git/worktree support as an error
+- perform bootstrap or page edits directly
 
 ## Stage 3 — Bootstrap
 
@@ -258,6 +309,13 @@ That means:
 - initialize directly in the final project root
 - normalize starter output immediately
 - finish bootstrap with a residue scan before any page build begins
+
+### Mandatory execution rule
+Bootstrap must run in a dedicated bootstrap agent:
+- Astro projects: `plugins/site-flow/agents/bootstrap-astro.md`
+- HTML projects: `plugins/site-flow/agents/bootstrap-html.md`
+
+The main session must only prepare inputs, dispatch the correct bootstrap agent, and record the resulting report/state.
 
 ### Forbidden Bootstrap Behavior
 - Do not scaffold into hidden helper directories and then copy everything into root.
@@ -274,54 +332,10 @@ If staging is used:
 - never copy the entire scaffold tree blindly
 - treat staging as internal implementation detail
 
-### Astro Bootstrap Agent Prompt Requirements
-
-```text
-You are bootstrapping a new Astro + Tailwind website project.
-
-Goal:
-Create a clean project in the final root directory, then normalize it immediately.
-
-Required steps:
-1. Initialize Astro in the target root.
-2. Add Tailwind and install dependencies.
-3. Create shared foundation files:
-   - src/layouts/BaseLayout.astro
-   - shared header/footer/navigation components
-   - shared content loading utilities if needed
-4. Normalize starter output immediately:
-   - replace starter package naming
-   - replace starter README if present
-   - remove or rewrite starter-only pages/files
-   - ensure no .astro-starter or similar residue remains
-5. Produce a bootstrap report.
-
-Rules:
-- Do not use copy-then-rm project migration flows.
-- Do not leave cleanup for later stages.
-- Do not build individual content-heavy pages yet.
-- Stop after shared foundation is ready and residue scan passes.
-```
-
-### HTML Bootstrap Agent Prompt Requirements
-
-```text
-You are bootstrapping a simple HTML + Tailwind static website.
-
-Goal:
-Create the minimal final project structure directly in root.
-
-Required steps:
-- Create index.html and shared static assets structure
-- Set up Tailwind via CDN
-- Create shared header/footer patterns if multiple pages are planned
-- Apply design tokens
-- Produce a bootstrap report
-
-Rules:
-- Keep the structure minimal and final
-- Do not create throwaway staging folders unless explicitly required
-```
+### Bootstrap agent contracts
+Dispatch one of these dedicated agent files with the project context and stack-specific inputs:
+- `plugins/site-flow/agents/bootstrap-astro.md`
+- `plugins/site-flow/agents/bootstrap-html.md`
 
 ### Residue Scan Gate
 
@@ -396,14 +410,17 @@ If a section has no real image, the orchestrator must still provide a preferred 
 
 ### Step 4.3 — Page Builder Agent Rules
 
-The page builder sub-agent must:
+Dispatch `plugins/site-flow/agents/page-builder.md` for every page. The page builder agent must:
 - build only the requested page
 - use `real` content when provided
 - otherwise use `seeded-demo` content by default
 - only fall back to `placeholder-minimal` if necessary
-- use approved visual archetypes for missing images
+- use approved visual archetypes only as fallback
 - use only approved motion tokens
 - create/update the page completion report
+- preserve or improve design richness during implementation
+
+The main session must not implement page code directly.
 
 ## Seeded Demo Content Policy
 
@@ -433,6 +450,24 @@ For hero or key-visual sections, a hybrid strategy is acceptable:
 - supporting sections: prefer `stock-library`
 - use `designed-placeholder` only as the last fallback
 
+A blank gradient block, empty frame, or generic decorative slab does not count as finished design for a required visual section.
+
+### Design richness requirement
+This workflow is for finished-looking website design, not scaffold output.
+
+Every completed page should show visible design richness, including where appropriate:
+- meaningful imagery or deliberate graphic composition
+- hierarchy, contrast, rhythm, and depth
+- polished section-specific visual storytelling
+- intentional motion and interaction feedback
+- refined hero and CTA treatments
+
+Treat these as failures in required or above-the-fold sections:
+- generic gradient placeholder blocks
+- empty image frames
+- starter-template-looking layouts
+- box-only sections that leave the design burden to the user
+
 ### Motion Seeding
 Use motion tokens defined in design tokens, for example:
 - reveal-soft
@@ -445,9 +480,9 @@ Do not improvise unrelated animation systems.
 
 ## Stage 5 — Validation Agent
 
-Always finish a build or update run with a validation stage. Use a focused helper when helpful.
+Always finish a build or update run with a validation stage. Validation must run in `plugins/site-flow/agents/site-validator.md`.
 
-### Validation Agent Responsibilities
+### Validation responsibilities
 - run build verification
 - scan for starter residue
 - verify all requested pages exist
@@ -456,27 +491,14 @@ Always finish a build or update run with a validation stage. Use a focused helpe
   - no lorem ipsum
   - no generic “your company” filler unless explicitly requested
   - seeded-demo coverage is coherent
+- verify required visual sections are complete
+- fail pages that still rely on gradient placeholder boxes, empty frames, or wireframe-like design in required visual areas
+- verify motion/interaction polish where the page spec expects it
 - report next actions clearly
 
-### Validation Agent Prompt Requirements
-
-```text
-You are the validation agent for a generated static website.
-
-Your job:
-1. Verify the requested pages were built.
-2. Run the appropriate build check.
-3. Scan for starter residue and unfinished scaffold artifacts.
-4. Review content quality and content-state usage.
-5. Produce a concise validation report.
-
-Check specifically for:
-- starter README remnants
-- starter package naming
-- helper scaffold folders
-- missing completion reports
-- sections still using weak placeholders instead of seeded-demo content
-```
+Validation must explicitly distinguish between:
+- acceptable finished visuals: real assets, stock imagery, AI-generated imagery, deliberate designed graphics
+- unacceptable unfinished visuals: blank placeholders, generic gradient slabs, empty mock frames
 
 ## Required Reports
 

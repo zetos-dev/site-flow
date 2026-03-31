@@ -68,6 +68,14 @@ If the site is using seeded demo content, say so clearly:
 
 If `.site/validation-report.md` exists, summarize any active warnings.
 
+Call out clearly when the current preview still has:
+- placeholder-heavy imagery
+- weak gradient-box visuals
+- wireframe-like sections
+- missing motion or interaction polish
+
+Frame those as unfinished design work, not acceptable final output.
+
 ## Phase 3 — Collect Structured Feedback
 
 Use `AskUserQuestion`.
@@ -92,24 +100,31 @@ Then ask for short free-text clarification if needed.
 
 ## Phase 4 — Apply Changes
 
-For small changes:
-- edit directly
+All code, content, imagery, motion, and design changes must be applied through a focused sub-agent.
 
-For larger changes:
-- dispatch a focused sub-agent
+The main session may only:
+- classify the feedback
+- identify the affected page/file set
+- choose the appropriate agent
+- summarize what changed for the user
 
-### Large-change sub-agent rules
+Do not edit directly in the main session, even for small changes.
+
+### Preview change agent rules
 Provide:
 - current page file(s)
 - current design tokens
 - user feedback
 - whether the affected content is real, seeded-demo, or placeholder-minimal
+- current visual state and image source by section
+- any validation warnings for missing imagery, weak placeholders, or lack of design richness
 
 Rules:
 - preserve unaffected content and structure
 - do not redesign unrelated sections
 - keep responsive behavior intact
 - keep within approved motion/design system unless the user explicitly wants a broader restyle
+- improve design completeness when the user calls out weak visuals, missing imagery, or placeholder-looking sections
 
 ## Phase 5 — Feedback Loop
 

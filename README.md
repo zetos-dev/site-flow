@@ -16,10 +16,11 @@ Most AI website workflows break down in three ways:
 
 1. **Discovers your needs** through simple, friendly questions
 2. **Recommends a design direction** matched to your site type and audience
-3. **Builds through focused stages** so readiness checks, bootstrap, page work, and validation stay organized
+3. **Builds through focused sub-agent stages** so readiness checks, bootstrap, page work, and validation stay organized and isolated from the main session
 4. **Uses deterministic bootstrap rules** so starter residue does not leak into the final project
 5. **Seeds demo-ready text and real-image-first visual defaults** so the site looks close to finished before all real assets exist
-6. **Separates content from code** so real copy and images can replace demo content later
+6. **Requires design-rich output** with imagery, motion, hierarchy, and polish rather than scaffold-like placeholder pages
+7. **Separates content from code** so real copy and images can replace demo content later
 
 ## Installation
 
@@ -79,7 +80,7 @@ It breaks work into:
 4. page build loop
 5. validation
 
-When a step is large or context-heavy, site-flow may use focused helper agents internally, but normal usage does not require git or worktrees.
+The main session handles orchestration, readiness checks, installation/setup steps, and status reporting. Bootstrap, page implementation, content refreshes, design changes, and validation are executed through focused sub-agents.
 
 Options:
 - `/site-build` — build the next pending page
@@ -89,7 +90,7 @@ Options:
 
 ### `/site-preview` — Review Quickly
 
-Starts a local preview server, explains what is still demo content, and helps the user make focused adjustments.
+Starts a local preview server, explains what is still demo content, highlights unfinished design debt if present, and helps the user make focused adjustments through sub-agents.
 
 ### `/site-status` — See Real Progress
 
@@ -145,6 +146,8 @@ A practical hybrid is used for many sites:
 - hero / key visual / case-study cover: AI-generated when it improves brand feel
 - supporting sections: stock-library first
 - designed placeholders: only as last fallback
+
+A deliberate designed graphic can count as complete. A blank gradient slab, empty image frame, or generic box placeholder cannot.
 
 ### Designed Visual Placeholders
 
@@ -223,7 +226,11 @@ Chosen automatically:
 site-flow/
 ├── plugins/site-flow/
 │   ├── agents/
-│   │   └── page-builder.md
+│   │   ├── bootstrap-astro.md
+│   │   ├── bootstrap-html.md
+│   │   ├── content-updater.md
+│   │   ├── page-builder.md
+│   │   └── site-validator.md
 │   └── commands/
 │       ├── site-init.md
 │       ├── site-build.md
@@ -251,6 +258,8 @@ Generated project artifacts:
 **AI recommends, user confirms.**
 
 The plugin makes technical decisions automatically, asks the user only about meaningful product/design choices, and aims to show a convincing website preview before all final assets are ready.
+
+That preview should still look like a designed product: rich imagery, motion, hierarchy, and polished composition are expected. If the result still looks like a scaffold, wireframe, or placeholder shell, the workflow should treat that as unfinished work rather than acceptable output.
 
 ## License
 
