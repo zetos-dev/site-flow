@@ -100,15 +100,16 @@ Then ask for short free-text clarification if needed.
 
 ## Phase 4 — Apply Changes
 
-All code, content, imagery, motion, and design changes must be applied through a focused sub-agent.
+Preview changes should be attempted through a focused sub-agent first.
 
-The main session may only:
+The main session may:
 - classify the feedback
 - identify the affected page/file set
 - choose the appropriate agent
 - summarize what changed for the user
+- apply the same scoped change directly as `main-session-fallback` if the helper cannot launch
 
-Do not edit directly in the main session, even for small changes.
+Do not expose git/worktree internals to the user as a prerequisite for continuing preview iteration.
 
 ### Preview change agent rules
 Provide:
@@ -125,6 +126,7 @@ Rules:
 - keep responsive behavior intact
 - keep within approved motion/design system unless the user explicitly wants a broader restyle
 - improve design completeness when the user calls out weak visuals, missing imagery, or placeholder-looking sections
+- if the helper agent cannot launch, apply only the same narrowly scoped change as `main-session-fallback` and record the fallback reason
 
 ## Phase 5 — Feedback Loop
 

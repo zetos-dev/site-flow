@@ -46,8 +46,9 @@ Determine:
 - whether residue warnings exist
 - whether validation passed
 - content readiness by page
-- whether delegation policy was followed
+- whether agent-first execution was used or fallback was used
 - whether any main-session execution violations were recorded
+- the latest fallback reason if present
 - whether the site is visually finish-ready or still scaffold-like
 
 When possible, summarize content states using:
@@ -74,7 +75,8 @@ Tech: {friendly tech stack}
 Stage: {workflow stage}
 Environment: {ready / needs setup / not checked yet}
 Missing tools: {none / Node.js / npm / npx}
-Delegation: {compliant / violation found / not recorded yet}
+Delegation: {agent-used / fallback-used / issue found}
+Last fallback: {none / reason summary}
 
 Progress: [{progress_bar}] {built_pages}/{total_pages} pages
 Bootstrap: {complete / pending}

@@ -41,6 +41,7 @@ Update `.site/page-{slug}-completion-report.md` to reflect:
 - changed image states
 - updated visual outcomes
 - any remaining placeholder debt
-- `Executor: sub-agent`
-- `Agent: content-updater`
-- `Delegation policy satisfied: yes | no`
+- `Executor: sub-agent | main-session-fallback`
+- `Agent: content-updater | none`
+- `Delegation outcome: agent-used | fallback-used`
+- `Fallback reason: none | agent-launch-failed | agent-unavailable | other`

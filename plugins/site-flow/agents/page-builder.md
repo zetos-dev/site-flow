@@ -182,9 +182,10 @@ Create or update `.site/page-{slug}-completion-report.md` with this structure:
 
 **Built**: {date}
 **Tech Stack**: {tech_stack}
-**Executor**: {sub-agent}
-**Agent**: {page-builder}
-**Delegation policy satisfied**: {yes | no}
+**Executor**: {sub-agent | main-session-fallback}
+**Agent**: {page-builder | none}
+**Delegation outcome**: {agent-used | fallback-used}
+**Fallback reason**: {none | agent-launch-failed | agent-unavailable | other}
 
 ## Files Created/Modified
 

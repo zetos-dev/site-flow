@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion]
 
 # /site-build — Website Build Orchestrator
 
-You are the **orchestrator** for building a static website. The main conversation must stay lean: you do orchestration, environment readiness, dependency installation/setup, state checks, sub-agent dispatch, report aggregation, and user communication. All bootstrap execution, page implementation, content refreshes, design revisions, and validation must run in focused sub-agents. Do not make the workflow depend on git or worktrees.
+You are the **orchestrator** for building a static website. The main conversation must stay lean: you do orchestration, environment readiness, dependency installation/setup, state checks, sub-agent dispatch, fallback coordination, report aggregation, and user communication. Bootstrap, page implementation, content refreshes, design revisions, and validation should be attempted in focused sub-agents first, with graceful in-session fallback when agent launch is unavailable. Do not make the workflow depend on git or worktrees.
 
 **Arguments**: $ARGUMENTS
 - No argument: Build the next pending page
@@ -27,12 +27,11 @@ Use staged handoffs:
 
 Execution policy:
 - The main session may perform environment readiness, dependency installation/setup, state/report reads and writes, stage selection, and agent dispatch.
-- The main session must not perform bootstrap edits, page implementation, content-only refresh edits, preview-driven design edits, or validation review directly.
-- Stage 3 bootstrap must run in a dedicated bootstrap agent.
-- Stage 4 page work must run in the page-builder agent.
-- `--update` content refreshes must run in a dedicated content-update agent.
-- Stage 5 validation must run in a dedicated validation agent.
-- If a required agent cannot be launched, stop and mark the workflow blocked instead of silently doing the work in the main session.
+- The main session should attempt dedicated agent execution first for bootstrap, page work, content refreshes, preview-driven design edits, and validation.
+- If agent launch succeeds, use the agent path.
+- If agent launch fails or is unavailable because of harness/session/worktree/git constraints, continue in the current project directory as `main-session-fallback`.
+- Git/worktree availability must never be treated as a user prerequisite.
+- Agent-launch failure alone must not block the workflow; record the fallback reason in state and reports instead.
 
 Do not assume git, branches, repositories, or worktrees. The normal workflow must work directly in the current project directory.
 
@@ -67,8 +66,10 @@ Use this structure:
     "resume_command": "/site-build"
   },
   "delegation": {
-    "policy": "required-non-environment",
+    "policy": "prefer-agent-with-fallback",
     "last_agent": null,
+    "last_execution_mode": null,
+    "fallback_events": [],
     "stage_agents": {
       "bootstrap": null,
       "page_build": [],
@@ -96,14 +97,15 @@ Use this structure:
 - set `stage: environment_checking` while checking local requirements
 - set `stage: environment_blocked` if required tools are missing
 - set `stage: environment_ready` after the readiness check confirms Node.js/npm support for the chosen stack
-- set `stage: bootstrapped` only after bootstrap completes, residue scan passes, and the bootstrap report records sub-agent execution
+- set `stage: bootstrapped` after bootstrap completes, residue scan passes, and the bootstrap report exists
 - set `stage: building_page:<slug>` before building that page
-- append a page slug to `completed_pages` only after its completion report exists and records sub-agent execution
+- append a page slug to `completed_pages` only after its completion report exists
 - append a page slug to `failed_pages` only if the page could not be completed cleanly
 - set `stage: pages_built` after all requested pages complete
-- set `stage: validated` only after validation passes and the validation report records sub-agent execution
-- set `stage: blocked` if progress cannot continue for another non-environment reason or delegation policy is violated
-- record any non-environment main-session execution in `delegation.main_session_execution_violations`
+- set `stage: validated` after validation passes and the validation report exists
+- set `stage: blocked` only if progress cannot continue because of a real build/input/environment failure
+- record approved direct execution after agent-launch failure in `delegation.fallback_events`, not `delegation.main_session_execution_violations`
+- record only unauthorized direct execution in `delegation.main_session_execution_violations`
 - update `environment_readiness.checked_at`, `last_action`, and `last_updated_at` whenever state changes
 
 ### Required Sidecar Reports
@@ -119,9 +121,10 @@ Maintain these files where applicable:
 **Tech Stack**: {tech_stack}
 **Strategy**: {in-place | staging}
 **Completed**: {ISO date}
-**Executor**: {sub-agent}
-**Agent**: {bootstrap-astro | bootstrap-html}
-**Delegation policy satisfied**: {yes | no}
+**Executor**: {sub-agent | main-session-fallback}
+**Agent**: {bootstrap-astro | bootstrap-html | none}
+**Delegation outcome**: {agent-used | fallback-used}
+**Fallback reason**: {none | agent-launch-failed | agent-unavailable | other}
 
 ## Actions Taken
 - {action}
@@ -147,9 +150,10 @@ Maintain these files where applicable:
 
 **Checked**: {ISO date}
 **Requested Scope**: {page or all pages}
-**Executor**: {sub-agent}
-**Agent**: {site-validator}
-**Delegation policy satisfied**: {yes | no}
+**Executor**: {sub-agent | main-session-fallback}
+**Agent**: {site-validator | none}
+**Delegation outcome**: {agent-used | fallback-used}
+**Fallback reason**: {none | agent-launch-failed | agent-unavailable | other}
 
 ## Build Verification
 - Build command: `{command}`
@@ -204,13 +208,13 @@ If `--update` is present:
 1. Run the Environment Readiness stage first.
 2. Scan `content/` for user-updated files.
 3. Read completion reports to determine built pages.
-4. For each built page with content changes, dispatch a dedicated content-update agent to update content only.
+4. For each built page with content changes, attempt the dedicated content-update agent first; if it cannot launch, continue as `main-session-fallback` in the current project directory.
 5. Do **not** change structure, layout, component hierarchy, or visual language.
 6. After updates, run the Validation stage.
 
 ### Content Update Agent Rules
 
-Dispatch `plugins/site-flow/agents/content-updater.md` with these rules:
+Attempt `plugins/site-flow/agents/content-updater.md` first with these rules:
 
 ```text
 You are updating content on an existing website page.
@@ -223,6 +227,7 @@ Rules:
 - Do not change shared design tokens.
 - Keep the page visually complete after the content swap.
 - Do not regress imagery or motion richness while updating content.
+- If agent launch is unavailable, execute the same scoped update as main-session-fallback and record the fallback reason.
 
 Inputs you must use:
 - Page name and file path(s)
@@ -311,11 +316,13 @@ That means:
 - finish bootstrap with a residue scan before any page build begins
 
 ### Mandatory execution rule
-Bootstrap must run in a dedicated bootstrap agent:
+Bootstrap should be attempted in a dedicated bootstrap agent first:
 - Astro projects: `plugins/site-flow/agents/bootstrap-astro.md`
 - HTML projects: `plugins/site-flow/agents/bootstrap-html.md`
 
-The main session must only prepare inputs, dispatch the correct bootstrap agent, and record the resulting report/state.
+If the bootstrap agent cannot launch, continue via `main-session-fallback` in the current project directory and record the fallback reason in state and the bootstrap report.
+
+The main session should normally prepare inputs, dispatch the correct bootstrap agent, and record the resulting report/state. Fallback execution is acceptable when agent launch is unavailable.
 
 ### Forbidden Bootstrap Behavior
 - Do not scaffold into hidden helper directories and then copy everything into root.
@@ -410,7 +417,7 @@ If a section has no real image, the orchestrator must still provide a preferred 
 
 ### Step 4.3 — Page Builder Agent Rules
 
-Dispatch `plugins/site-flow/agents/page-builder.md` for every page. The page builder agent must:
+Attempt `plugins/site-flow/agents/page-builder.md` first for every page. The page builder agent must:
 - build only the requested page
 - use `real` content when provided
 - otherwise use `seeded-demo` content by default
@@ -420,7 +427,7 @@ Dispatch `plugins/site-flow/agents/page-builder.md` for every page. The page bui
 - create/update the page completion report
 - preserve or improve design richness during implementation
 
-The main session must not implement page code directly.
+If the page-builder agent cannot launch, the main session may execute the same scoped page task as `main-session-fallback` and must record the fallback reason.
 
 ## Seeded Demo Content Policy
 
@@ -480,7 +487,9 @@ Do not improvise unrelated animation systems.
 
 ## Stage 5 — Validation Agent
 
-Always finish a build or update run with a validation stage. Validation must run in `plugins/site-flow/agents/site-validator.md`.
+Always finish a build or update run with a validation stage. Attempt `plugins/site-flow/agents/site-validator.md` first.
+
+If the validation agent cannot launch, continue via `main-session-fallback` and record the fallback reason in state and the validation report.
 
 ### Validation responsibilities
 - run build verification

@@ -147,8 +147,10 @@ Use this exact structure:
     "resume_command": "/site-build"
   },
   "delegation": {
-    "policy": "required-non-environment",
+    "policy": "prefer-agent-with-fallback",
     "last_agent": null,
+    "last_execution_mode": null,
+    "fallback_events": [],
     "stage_agents": {
       "bootstrap": null,
       "page_build": [],
@@ -190,12 +192,12 @@ Allowed `stage` values:
 - While checking local requirements: `environment_checking`
 - If required tools are missing: `environment_blocked`
 - After setup confirms readiness: `environment_ready`
-- After bootstrap finishes, residue scan passes, and the bootstrap report confirms sub-agent execution: `bootstrapped`
+- After bootstrap finishes, residue scan passes, and the bootstrap report exists: `bootstrapped`
 - While building a page: `building_page:<slug>`
-- After all requested pages are built and each completion report confirms sub-agent execution: `pages_built`
-- After validation passes and the validation report confirms sub-agent execution: `validated`
+- After all requested pages are built and each completion report exists: `pages_built`
+- After validation passes and the validation report exists: `validated`
 - After preview/review approval: `reviewed`
-- If a non-environment blocking error prevents progress or delegation policy is violated: `blocked`
+- If a real non-recoverable environment/input/build error prevents progress: `blocked`
 
 ### Update rules
 - `current_target` should contain the active page slug during page build, otherwise `null`
@@ -205,10 +207,12 @@ Allowed `stage` values:
 - `environment_readiness.missing` should list missing tools like `node`, `npm`, or `npx`
 - `environment_readiness.next_step` should be a plain-language next action for the user
 - `environment_readiness.resume_command` should usually be `/site-build`
-- `delegation.policy` should be `required-non-environment`
-- `delegation.last_agent` should record the most recent executor agent
+- `delegation.policy` should be `prefer-agent-with-fallback`
+- `delegation.last_agent` should record the most recent executor agent when one was used
+- `delegation.last_execution_mode` should be `sub-agent | main-session-fallback`
+- `delegation.fallback_events` should record approved fallback uses with stage, target, reason, and timestamp
 - `delegation.stage_agents` should record bootstrap, page, update, and validation agents used
-- `delegation.main_session_execution_violations` should record any forbidden main-session execution
+- `delegation.main_session_execution_violations` should record only unauthorized direct execution, not approved fallback
 - `last_action` should be a short human-readable summary
 - `last_updated_at` must be refreshed whenever the file changes
 - `residue_checks.status`: `pending | passed | warning | failed`
@@ -379,4 +383,6 @@ Define a restrained motion system using named tokens such as:
 - Frame the output as something the user can preview quickly.
 - Make it clear they can replace demo content later without rebuilding the entire design direction.
 - Do not assume the user knows git, repositories, branches, or worktrees.
+- Agent orchestration is an internal implementation detail, not a user requirement.
+- Never ask the user to configure git/worktrees just to continue building a site.
 - Explain environment setup in everyday language when the chosen stack needs extra tools.

@@ -5,7 +5,7 @@ when-to-use: "Used internally by /site-build after build/update work. NOT invoke
 
 # site-validator Agent
 
-This agent is dispatched by `/site-build` after build or update work. It is a required execution agent for Stage 5 validation.
+This agent is dispatched by `/site-build` after build or update work. It should be attempted first for Stage 5 validation. If agent launch is unavailable, the same validation scope may run as documented `main-session-fallback`.
 
 ## Primary Responsibility
 
@@ -31,9 +31,10 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - helper scaffold folders
 
 ### Delegation compliance
-- bootstrap report records sub-agent execution
-- page completion reports record sub-agent execution
-- validation report records sub-agent execution
+- bootstrap report records execution mode truthfully
+- page completion reports record execution mode truthfully
+- validation report records execution mode truthfully
+- approved `main-session-fallback` is acceptable when fallback reason is recorded
 - any forbidden main-session execution is surfaced
 
 ### Content quality
@@ -56,16 +57,17 @@ Verify that the generated site is built, coherent, visually complete, and consis
 
 ## Outcome Rules
 
-- `passed`: site feels finished and no blocked visual/delegation issues remain
-- `warning`: site is usable but still has non-blocking visual debt or replacement opportunities
-- `failed`: required visuals are incomplete, scaffold-like output remains, or delegation policy was violated
+- `passed`: site feels finished and no blocked visual issues or hidden execution violations remain
+- `warning`: site is usable and fallback execution was acceptable, but non-blocking visual debt or degraded execution should still be noted
+- `failed`: required visuals are incomplete, scaffold-like output remains, fallback/reporting is inconsistent, or user-facing git/worktree prerequisites leaked into the workflow
 
 ## Report Requirements
 
 Write `.site/validation-report.md` with:
-- `Executor: sub-agent`
-- `Agent: site-validator`
-- `Delegation policy satisfied: yes | no`
+- `Executor: sub-agent | main-session-fallback`
+- `Agent: site-validator | none`
+- `Delegation outcome: agent-used | fallback-used`
+- `Fallback reason: none | agent-launch-failed | agent-unavailable | other`
 - build verification
 - residue scan
 - page coverage

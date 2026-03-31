@@ -5,7 +5,7 @@ when-to-use: "Used internally by /site-build for HTML projects. NOT invoked dire
 
 # bootstrap-html Agent
 
-This agent is dispatched by `/site-build` for HTML bootstrap work. It is a required execution agent for Stage 3 bootstrap.
+This agent is dispatched by `/site-build` for HTML bootstrap work. It should be attempted first for Stage 3 bootstrap. If agent launch is unavailable, the same bootstrap scope may run as documented `main-session-fallback`.
 
 ## Primary Responsibility
 
@@ -43,9 +43,10 @@ The orchestrator must provide:
 ## Report Requirements
 
 Write `.site/bootstrap-report.md` with:
-- `Executor: sub-agent`
-- `Agent: bootstrap-html`
-- `Delegation policy satisfied: yes | no`
+- `Executor: sub-agent | main-session-fallback`
+- `Agent: bootstrap-html | none`
+- `Delegation outcome: agent-used | fallback-used`
+- `Fallback reason: none | agent-launch-failed | agent-unavailable | other`
 - actions taken
 - files created/normalized
 - residue scan results

@@ -80,7 +80,7 @@ It breaks work into:
 4. page build loop
 5. validation
 
-The main session handles orchestration, readiness checks, installation/setup steps, and status reporting. Bootstrap, page implementation, content refreshes, design changes, and validation are executed through focused sub-agents.
+The main session handles orchestration, readiness checks, installation/setup steps, and status reporting. Bootstrap, page implementation, content refreshes, design changes, and validation are attempted through focused sub-agents first, with graceful fallback in the current directory if agent launch is unavailable.
 
 Options:
 - `/site-build` — build the next pending page
@@ -106,6 +106,8 @@ Shows:
 ## Environment Readiness
 
 site-flow is designed for non-technical users. You do **not** need git or worktrees to use it.
+
+Agent orchestration is an internal implementation detail. If helper-agent launch is unavailable, site-flow should continue in a compatible fallback mode instead of asking the user to configure git/worktree internals.
 
 If the chosen site stack needs extra tools and your computer is missing them:
 - site-flow checks first
