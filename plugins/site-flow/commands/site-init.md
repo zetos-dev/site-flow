@@ -16,7 +16,7 @@ This workflow should help the user see something close to a finished website ear
 
 Default behavior:
 - use `demo-ready` seeded content unless the user clearly wants sparse placeholders
-- use designed visual placeholders when real images are missing
+- prefer real-looking default imagery first: stock-library for most sections, AI-generated images for key visuals when available, and designed placeholders only as fallback
 - make the generated plan coherent enough that `/site-build` can produce polished pages without asking for lots of materials first
 
 ## Pre-check: Existing Project
@@ -97,6 +97,8 @@ After confirmation, generate the planning artifacts.
 
 Do not ask the user to choose the stack.
 
+After planning, the workflow should check whether this computer is ready to build and preview the chosen stack. If something important is missing, it should pause, explain what to install in simple language, and let the user continue later.
+
 ### 3b. Create `.site/config.json`
 Include the usual project metadata plus default seeded-content settings.
 
@@ -114,7 +116,10 @@ Required fields:
   "status": "initialized",
   "seed_mode": "demo-ready",
   "content_profile": "<enterprise-tech|professional-services|...>",
-  "bootstrap_strategy": "in-place"
+  "bootstrap_strategy": "in-place",
+  "image_strategy": "hybrid",
+  "image_sources": ["real-user-assets", "stock-library", "ai-generated", "designed-placeholder"],
+  "image_profile": "<industry-appropriate style profile>"
 }
 ```
 
@@ -132,6 +137,13 @@ Use this exact structure:
   "bootstrap_strategy": "in-place",
   "seed_mode": "demo-ready",
   "content_profile": "<profile>",
+  "environment_readiness": {
+    "status": "pending",
+    "missing": [],
+    "checked_at": null,
+    "next_step": "",
+    "resume_command": "/site-build"
+  },
   "last_action": "project initialized",
   "last_updated_at": "<ISO date>",
   "residue_checks": {
@@ -150,6 +162,8 @@ Use this exact structure:
 ### Stage values
 Allowed `stage` values:
 - `initialized`
+- `environment_checking`
+- `environment_blocked`
 - `environment_ready`
 - `bootstrapped`
 - `building_page:<slug>`
@@ -160,18 +174,24 @@ Allowed `stage` values:
 
 ### Stage transition rules
 - After `/site-init`: `initialized`
-- After setup agent confirms environment/project readiness: `environment_ready`
+- While checking local requirements: `environment_checking`
+- If required tools are missing: `environment_blocked`
+- After setup confirms readiness: `environment_ready`
 - After bootstrap finishes and residue scan passes: `bootstrapped`
 - While building a page: `building_page:<slug>`
 - After all requested pages are built: `pages_built`
 - After validation passes: `validated`
 - After preview/review approval: `reviewed`
-- If a blocking error prevents progress: `blocked`
+- If a non-environment blocking error prevents progress: `blocked`
 
 ### Update rules
 - `current_target` should contain the active page slug during page build, otherwise `null`
 - `completed_pages` should append successful page slugs only once
 - `failed_pages` should list pages that could not be completed cleanly
+- `environment_readiness.status`: `pending | checking | ready | blocked`
+- `environment_readiness.missing` should list missing tools like `node`, `npm`, or `npx`
+- `environment_readiness.next_step` should be a plain-language next action for the user
+- `environment_readiness.resume_command` should usually be `/site-build`
 - `last_action` should be a short human-readable summary
 - `last_updated_at` must be refreshed whenever the file changes
 - `residue_checks.status`: `pending | passed | warning | failed`
@@ -203,16 +223,23 @@ Describe:
 - where seeded demo content is acceptable vs where real content is preferred
 
 ### 3f. Create `.site/content-guide.md`
-This file explains how content states work.
+This file explains how content and image states work.
 
 It must define:
 - `real` — user-supplied content/assets
-- `seeded-demo` — polished AI-generated content for preview/demo quality
+- `seeded-demo` — polished AI-generated text for preview/demo quality
 - `placeholder-minimal` — last-resort lightweight placeholder
+
+It must also define image sourcing priority:
+- `real-user-assets`
+- `stock-library`
+- `ai-generated`
+- `designed-placeholder`
 
 Also explain:
 - which sections most benefit from real assets first
-- which sections can safely stay demo-ready for early reviews
+- which sections can safely use stock imagery first
+- which sections should prefer AI-generated hero/key-visual treatment
 - that the site can be previewed before all materials are ready
 
 ### 3g. Create `.site/page-spec-{slug}.md`
@@ -222,7 +249,8 @@ Each page spec must include:
 - layout intent
 - content requirements by section
 - content state defaults by section
-- allowed visual archetypes for image-heavy sections
+- image source preference by section
+- allowed visual archetypes only as fallback for image-heavy sections
 - allowed motion tokens for the page
 - accessibility / responsiveness notes
 
@@ -249,7 +277,8 @@ Use this structure:
 - Content files:
   - `content/{NN}-{page}/...`
 - Default content state: `real | seeded-demo | placeholder-minimal`
-- Allowed visual archetypes: {list}
+- Image source preference: `real-user-assets | stock-library | ai-generated | designed-placeholder`
+- Allowed visual archetypes (fallback only): {list}
 - Allowed motion tokens: {list}
 - Notes: {accessibility / responsive notes}
 ```
@@ -284,15 +313,18 @@ Rules:
 - avoid fake customer names unless clearly labeled fictional examples
 
 ### Images / Visuals
-For missing imagery, plan for designed placeholders such as:
-- brand-gradient
-- dashboard-mockup
-- team-silhouette-panel
-- abstract-office-scene
-- device-frame
-- metric-card-cluster
-- logo-strip-placeholder
-- case-study-cover-panel
+Default image goal: the user should see something close to a finished site, not just framed placeholders.
+
+Plan image sourcing in this order:
+1. `real-user-assets`
+2. `stock-library`
+3. `ai-generated`
+4. `designed-placeholder`
+
+For pages with strong brand impact, plan a hybrid default:
+- hero / key visual / case-study cover: prefer `ai-generated`
+- ordinary supporting sections: prefer `stock-library`
+- use `designed-placeholder` only when the earlier sources are unavailable
 
 ### Motion
 Define a restrained motion system using named tokens such as:
@@ -308,3 +340,5 @@ Define a restrained motion system using named tokens such as:
 - Recommend; do not overwhelm.
 - Frame the output as something the user can preview quickly.
 - Make it clear they can replace demo content later without rebuilding the entire design direction.
+- Do not assume the user knows git, repositories, branches, or worktrees.
+- Explain environment setup in everyday language when the chosen stack needs extra tools.

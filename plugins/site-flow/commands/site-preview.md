@@ -14,28 +14,44 @@ You are helping a non-technical user preview their website and make adjustments 
 2. Read `.site/workflow-state.json` if present.
 3. Check that at least one page has been built.
 4. If no pages are built, tell the user to run `/site-build` first.
+5. Check environment readiness before starting any preview server.
+
+If the chosen stack needs Node.js/npm and they are missing:
+- explain this in plain language
+- do not attempt preview commands yet
+- tell the user what to install
+- tell them to rerun `/site-preview` or `/site-build` after installation
 
 ## Phase 1 — Start Preview Server
 
 ### For Astro projects
-Run in the background:
+Only run a preview server after confirming Node.js/npm readiness.
+
+If environment readiness is blocked:
+- explain that Astro preview needs Node.js and npm
+- do not fall back to Python as if it were equivalent
+- tell the user to install the missing tools and rerun the command
+
+If ready, run in the background:
 
 ```bash
 npx astro dev
 ```
 
 ### For HTML projects
-Run in the background:
+If Node-based preview tools are available, run in the background:
 
 ```bash
 npx serve .
 ```
 
-Fallback:
+If Node-based tools are unavailable but the site is plain static HTML, you may use this explicit fallback:
 
 ```bash
 python3 -m http.server 8000
 ```
+
+Tell the user this is a simple local preview fallback for static HTML.
 
 Then tell the user where to open the site.
 
@@ -45,7 +61,9 @@ Before asking for feedback, explain the current content state in plain language.
 
 If the site is using seeded demo content, say so clearly:
 - some text is polished demo content
-- some visuals may be designed placeholders
+- some images may come from default stock-library selections
+- some hero or key visuals may be AI-generated
+- some visuals may still be designed placeholders
 - this is intentional so the user can judge the design before gathering every final asset
 
 If `.site/validation-report.md` exists, summarize any active warnings.

@@ -1,6 +1,6 @@
 # site-flow
 
-AI-driven static website workflow for Claude Code. It helps non-technical users go from idea to a polished website preview with staged sub-agents, deterministic project bootstrap, and demo-ready seeded content.
+AI-driven static website workflow for Claude Code. It helps non-technical users go from idea to a polished website preview with focused build stages, deterministic project bootstrap, environment readiness checks, and demo-ready seeded content.
 
 ## The Problem
 
@@ -16,9 +16,9 @@ Most AI website workflows break down in three ways:
 
 1. **Discovers your needs** through simple, friendly questions
 2. **Recommends a design direction** matched to your site type and audience
-3. **Builds through staged sub-agents** so setup, bootstrap, page work, and validation are isolated
+3. **Builds through focused stages** so readiness checks, bootstrap, page work, and validation stay organized
 4. **Uses deterministic bootstrap rules** so starter residue does not leak into the final project
-5. **Seeds demo-ready text and visual placeholders** so the site looks close to finished before all real assets exist
+5. **Seeds demo-ready text and real-image-first visual defaults** so the site looks close to finished before all real assets exist
 6. **Separates content from code** so real copy and images can replace demo content later
 
 ## Installation
@@ -36,6 +36,8 @@ Most AI website workflows break down in three ways:
 
 # 2. Build all pages
 /site-build --all
+# If this computer is missing required build tools, site-flow will pause,
+# explain what to install, and let you resume afterward.
 
 # 3. Preview in browser
 /site-preview
@@ -71,13 +73,13 @@ Then it generates the planning system under `.site/`, including:
 `/site-build` is a staged orchestrator, not a single monolithic coding pass.
 
 It breaks work into:
-1. discovery / plan check
-2. environment setup agent
-3. bootstrap agent
-4. page builder agent (one page at a time)
-5. validation agent
+1. environment readiness
+2. discovery / plan check
+3. bootstrap
+4. page build loop
+5. validation
 
-This keeps the main session lighter and makes failures easier to isolate.
+When a step is large or context-heavy, site-flow may use focused helper agents internally, but normal usage does not require git or worktrees.
 
 Options:
 - `/site-build` — build the next pending page
@@ -93,10 +95,25 @@ Starts a local preview server, explains what is still demo content, and helps th
 
 Shows:
 - current workflow stage
+- environment readiness and missing tools
 - built pages vs planned pages
 - whether bootstrap residue checks passed
 - whether validation passed
 - how much of the site is using real content vs demo-ready content vs minimal placeholders
+- what kind of imagery is currently being used (user, stock, AI, or placeholder)
+
+## Environment Readiness
+
+site-flow is designed for non-technical users. You do **not** need git or worktrees to use it.
+
+If the chosen site stack needs extra tools and your computer is missing them:
+- site-flow checks first
+- explains what is missing in plain language
+- pauses cleanly instead of failing deep into the build
+- lets you resume by running `/site-build` again after installation
+
+For Astro projects, Node.js and npm are required.
+For simple HTML projects, preview can sometimes fall back to a basic local server.
 
 ## Demo-Ready Content System
 
@@ -114,9 +131,22 @@ Examples of content profiles:
 - healthcare-b2b
 - luxury-brand
 
-### Designed Visual Placeholders
+### Real-Image-First Defaults
 
-When real images are missing, the workflow prefers reusable visual archetypes over weak empty boxes.
+The default goal is not to show a nice empty framework. It is to show a website that already feels close to finished.
+
+Default image priority:
+1. `real-user-assets`
+2. `stock-library`
+3. `ai-generated`
+4. `designed-placeholder`
+
+A practical hybrid is used for many sites:
+- hero / key visual / case-study cover: AI-generated when it improves brand feel
+- supporting sections: stock-library first
+- designed placeholders: only as last fallback
+
+### Designed Visual Placeholders
 
 Examples:
 - brand-gradient

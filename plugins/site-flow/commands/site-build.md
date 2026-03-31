@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion]
 
 # /site-build — Website Build Orchestrator
 
-You are the **orchestrator** for building a static website. The main conversation must stay lean: you do orchestration, state checks, and user communication. All heavy execution work happens in isolated sub-agents.
+You are the **orchestrator** for building a static website. The main conversation must stay lean: you do orchestration, state checks, and user communication. Prefer focused helper sub-agents for large or context-heavy stages, but do not make the workflow depend on git, worktrees, or helper-only execution.
 
 **Arguments**: $ARGUMENTS
 - No argument: Build the next pending page
@@ -18,14 +18,14 @@ You are the **orchestrator** for building a static website. The main conversatio
 
 Never handle initialization, dependency setup, framework bootstrap, page implementation, and validation in one long main-session flow.
 
-Use staged sub-agents with explicit handoffs:
-1. Discovery / plan check
-2. Environment setup agent
-3. Bootstrap agent
-4. Page builder agent (one page at a time)
-5. Validation agent
+Use staged handoffs:
+1. Environment readiness
+2. Discovery / plan check
+3. Bootstrap
+4. Page build loop
+5. Validation
 
-The main session should summarize progress and update state, but not absorb the full implementation context of each stage.
+Prefer focused helper sub-agents when helpful for isolation, but do not assume git, branches, repositories, or worktrees. The normal workflow must work directly in the current project directory.
 
 ## Pre-check
 
@@ -50,6 +50,13 @@ Use this structure:
   "bootstrap_strategy": "in-place",
   "seed_mode": "demo-ready",
   "content_profile": "enterprise-tech",
+  "environment_readiness": {
+    "status": "pending",
+    "missing": [],
+    "checked_at": null,
+    "next_step": "",
+    "resume_command": "/site-build"
+  },
   "last_action": "project initialized",
   "last_updated_at": "<ISO date>",
   "residue_checks": {
@@ -66,15 +73,17 @@ Use this structure:
 ```
 
 ### Stage Transition Rules
-- set `stage: environment_ready` after the setup agent confirms readiness
+- set `stage: environment_checking` while checking local requirements
+- set `stage: environment_blocked` if required tools are missing
+- set `stage: environment_ready` after the readiness check confirms Node.js/npm support for the chosen stack
 - set `stage: bootstrapped` only after bootstrap completes and residue scan passes
-- set `stage: building_page:<slug>` before dispatching a page-builder for that page
+- set `stage: building_page:<slug>` before building that page
 - append a page slug to `completed_pages` only after its completion report exists
 - append a page slug to `failed_pages` only if the page could not be completed cleanly
 - set `stage: pages_built` after all requested pages complete
 - set `stage: validated` after validation passes
-- set `stage: blocked` if progress cannot continue without intervention
-- update `last_action` and `last_updated_at` whenever state changes
+- set `stage: blocked` if progress cannot continue for another non-environment reason
+- update `environment_readiness.checked_at`, `last_action`, and `last_updated_at` whenever state changes
 
 ### Required Sidecar Reports
 Maintain these files where applicable:
@@ -145,11 +154,12 @@ Maintain these files where applicable:
 
 If `--update` is present:
 
-1. Scan `content/` for user-updated files.
-2. Read completion reports to determine built pages.
-3. For each built page with content changes, dispatch one sub-agent to update content only.
-4. Do **not** change structure, layout, component hierarchy, or visual language.
-5. After updates, dispatch the validation agent.
+1. Run the Environment Readiness stage first.
+2. Scan `content/` for user-updated files.
+3. Read completion reports to determine built pages.
+4. For each built page with content changes, use a focused helper when helpful to update content only.
+5. Do **not** change structure, layout, component hierarchy, or visual language.
+6. After updates, run the Validation stage.
 
 ### Content Update Agent Rules
 
@@ -176,7 +186,36 @@ Then continue to **Validation Stage**.
 
 ## Mode: Regular Build
 
-## Stage 1 — Discovery / Plan Check
+## Stage 1 — Environment Readiness
+
+This stage should happen before bootstrap, page build, update, or preview-oriented commands.
+
+Use a focused helper when helpful, but keep the behavior the same either way.
+
+### Goals
+- Check whether the current machine is ready for the chosen stack
+- Detect missing `node`, `npm`, and when relevant `npx`
+- Explain missing requirements in plain language
+- Return a clear resume path without attempting system installation automatically
+
+### Rules
+- Do not assume git, repositories, branches, or worktrees.
+- Do not create worktrees.
+- Do not treat missing worktree support as an error condition.
+- By default, do not run system-level installation commands inside a helper.
+- If required tools are missing, stop here and update `.site/workflow-state.json`.
+
+### Readiness outcomes
+- `ready`
+- `blocked` with missing tool list
+
+### Example blocked guidance
+- "Before I can build this website, this computer needs Node.js and npm."
+- "Install Node.js, then run `/site-build` again and I will continue from here."
+
+Only after readiness is confirmed should the workflow continue.
+
+## Stage 2 — Discovery / Plan Check
 
 1. Determine requested scope:
    - next page
@@ -192,46 +231,25 @@ Then continue to **Validation Stage**.
    - Astro + Tailwind
    - HTML + Tailwind
 
-## Stage 2 — Environment Setup Agent
+### Helper-based readiness check
 
-Dispatch a dedicated setup sub-agent before any bootstrap or page generation.
+When helpful, use a focused helper for environment readiness.
 
-### Setup Agent Responsibilities
-- Check required tooling for the chosen stack
-- Inspect the target directory state
-- Detect whether the project is already bootstrapped
-- Decide bootstrap strategy
-- Record findings for the orchestrator
+That helper should:
+- inspect the target directory
+- detect whether `node`, `npm`, and when relevant `npx` are available
+- detect whether the project is already bootstrapped
+- explain missing requirements in plain language
+- report whether bootstrap should continue
 
-### Setup Agent Constraints
-- Must not create page files
-- Must not install unrelated tools
-- Must not improvise a copy-then-cleanup project migration flow
+Helper constraints:
+- must not create page files
+- must not install tools automatically
+- must not create worktrees
+- must not improvise copy-then-cleanup project migration flows
+- must not treat missing git/worktree support as an error
 
-### Setup Agent Prompt Requirements
-
-```text
-You are the environment setup agent for a static website project.
-
-Your job:
-1. Inspect the target directory.
-2. Determine whether the project is already bootstrapped.
-3. Verify framework prerequisites.
-4. Decide whether bootstrap is needed.
-5. Report findings clearly.
-
-Rules:
-- Do not build any page.
-- Do not create reusable site sections.
-- Do not move project files between directories.
-- If temporary staging seems necessary, recommend it explicitly instead of improvising it.
-```
-
-If setup says bootstrap is not needed, skip to Stage 4.
-
-## Stage 3 — Bootstrap Agent
-
-If the project is not initialized, dispatch a dedicated bootstrap sub-agent.
+## Stage 3 — Bootstrap
 
 ### Default Bootstrap Strategy
 Use **deterministic in-place bootstrap**.
@@ -342,7 +360,9 @@ Construct a page-builder prompt that explicitly provides:
 - complete page specification
 - content mapping
 - section-by-section content state map: `real | seeded-demo | placeholder-minimal`
-- seeded visual archetypes allowed for the page
+- image source plan per section
+- image state map per section
+- seeded visual archetypes allowed only as fallback for the page
 - motion token set allowed for the page
 - references to existing patterns
 
@@ -355,27 +375,23 @@ Content State Map:
   - content_files:
     - content/01-homepage/hero-title.md
     - content/01-homepage/hero-description.md
-  - visual_archetype: brand-gradient
   - motion_tokens:
     - reveal-soft
-- Logo Strip:
-  - state: placeholder-minimal
-  - content_files:
-    - content/01-homepage/logo-strip.md
-  - visual_archetype: logo-strip-placeholder
-  - motion_tokens:
-    - stagger-cards
-- Features:
-  - state: real
-  - content_files:
-    - content/01-homepage/feature-1.md
-    - content/01-homepage/feature-2.md
-  - visual_archetype: none
-  - motion_tokens:
-    - hover-lift
+
+Image Source Plan:
+- Hero:
+  - preferred: ai-generated
+  - fallback: stock-library
+  - final_fallback: designed-placeholder
+- Team Section:
+  - preferred: stock-library
+  - fallback: designed-placeholder
+- Contact Background:
+  - preferred: stock-library
+  - fallback: designed-placeholder
 ```
 
-If a section has no real image, the orchestrator must still provide one approved `visual_archetype` or explicitly set it to `none`.
+If a section has no real image, the orchestrator must still provide a preferred image source and a fallback path.
 
 
 ### Step 4.3 — Page Builder Agent Rules
@@ -404,17 +420,18 @@ Use industry-aware seeded content that is:
 - never fake real customer claims presented as fact
 
 ### Visual Seeding
-Prefer designed placeholder archetypes over empty boxes or generic gradients alone.
+Default image goal: help the user see a near-finished site quickly.
 
-Examples:
-- brand-gradient
-- dashboard-mockup
-- team-silhouette-panel
-- abstract-office-scene
-- device-frame
-- metric-card-cluster
-- logo-strip-placeholder
-- case-study-cover-panel
+Use this priority:
+1. real-user-assets
+2. stock-library
+3. ai-generated
+4. designed-placeholder
+
+For hero or key-visual sections, a hybrid strategy is acceptable:
+- hero / key visual / case-study cover: prefer `ai-generated`
+- supporting sections: prefer `stock-library`
+- use `designed-placeholder` only as the last fallback
 
 ### Motion Seeding
 Use motion tokens defined in design tokens, for example:
@@ -428,7 +445,7 @@ Do not improvise unrelated animation systems.
 
 ## Stage 5 — Validation Agent
 
-Always finish a build or update run with a validation sub-agent.
+Always finish a build or update run with a validation stage. Use a focused helper when helpful.
 
 ### Validation Agent Responsibilities
 - run build verification

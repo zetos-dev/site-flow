@@ -39,6 +39,8 @@ Use Glob to find:
 
 Determine:
 - current workflow stage
+- environment readiness
+- missing tools if any
 - total pages vs built pages
 - whether bootstrap has completed
 - whether residue warnings exist
@@ -51,9 +53,10 @@ When possible, summarize content states using:
 - `placeholder-minimal`
 
 Also summarize visual readiness where possible:
-- real images
-- designed visual archetypes
-- minimal placeholders
+- real user images
+- stock-library images
+- AI-generated images
+- designed placeholders
 
 ### 3. Display Overview
 
@@ -64,6 +67,8 @@ Website Project: {project_name}
 Style: {design_style}
 Tech: {friendly tech stack}
 Stage: {workflow stage}
+Environment: {ready / needs setup / not checked yet}
+Missing tools: {none / Node.js / npm / npx}
 
 Progress: [{progress_bar}] {built_pages}/{total_pages} pages
 Bootstrap: {complete / pending}
@@ -72,7 +77,7 @@ Validation: {passed / pending / needs fixes}
 
 | Page     | Status    | Content Mix                     |
 |----------|-----------|---------------------------------|
-| Homepage | ✓ Built   | seeded-demo + archetype visuals |
+| Homepage | ✓ Built   | seeded-demo + stock/AI imagery  |
 | About    | ✓ Built   | real + seeded-demo              |
 | Services | ◻ Pending | not built yet                   |
 
@@ -81,8 +86,14 @@ Content Readiness:
 - Demo-ready content: {summary}
 - Minimal placeholders: {summary}
 
+Image Readiness:
+- User images: {summary}
+- Stock images: {summary}
+- AI-generated images: {summary}
+- Designed placeholders: {summary}
+
 Next Step:
-- {most useful next command}
+- {most useful next command or install action}
 ```
 
 ### 4. Detailed Page View
@@ -97,6 +108,7 @@ Show:
 - page status
 - main sections
 - content state by section
+- what kind of imagery is being used
 - whether real images are present
 - what should be replaced next for best impact
 
@@ -108,9 +120,9 @@ Status: Built
 Built on: {date}
 
 Sections:
-- Hero — seeded-demo text, brand-gradient visual
+- Hero — seeded-demo text, AI-generated hero visual
 - Trust Strip — placeholder-minimal logos
-- Features — seeded-demo
+- Features — seeded-demo with stock imagery
 - CTA — seeded-demo
 
 Best Next Replacements:

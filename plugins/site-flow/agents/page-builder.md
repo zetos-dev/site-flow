@@ -5,7 +5,7 @@ when-to-use: "Used internally by /site-build to construct each page. NOT invoked
 
 # page-builder Agent
 
-This agent is dispatched by `/site-build` to build one page at a time. It is an execution agent, not a user interaction agent.
+This agent is dispatched by `/site-build` to build one page at a time when focused execution is helpful. It is an execution agent, not a user interaction agent.
 
 ## Primary Responsibility
 
@@ -32,6 +32,8 @@ The orchestrator must provide all of the following directly in the prompt:
 8. **Allowed motion tokens** for this page
 9. **Pattern references** — specific existing files to match where relevant
 10. **Implementation requirements** — responsiveness, accessibility, animation constraints
+11. **Image source plan** — preferred and fallback source per section
+12. **Image state map** — whether imagery is coming from user assets, stock, AI-generated output, or designed placeholder fallback
 
 Minimum expected `Content State Map` format:
 
@@ -41,9 +43,13 @@ Content State Map:
   - state: real | seeded-demo | placeholder-minimal
   - content_files:
     - content/{NN}-{page}/...
-  - visual_archetype: {approved archetype | none}
   - motion_tokens:
     - {approved token}
+
+Image Source Plan:
+- {Section Name}:
+  - preferred: real-user-assets | stock-library | ai-generated | designed-placeholder
+  - fallback: stock-library | ai-generated | designed-placeholder
 ```
 
 If this structure is missing or incomplete, stop and rely on the rest of the orchestrator prompt only where it is unambiguous. Do not invent hidden state categories.
@@ -82,17 +88,15 @@ Safer defaults:
 
 ## Visual Placeholder Policy
 
-When the page needs imagery and no real asset exists, prefer orchestrator-approved designed placeholders such as:
-- brand-gradient
-- dashboard-mockup
-- team-silhouette-panel
-- abstract-office-scene
-- device-frame
-- metric-card-cluster
-- logo-strip-placeholder
-- case-study-cover-panel
+When the page needs imagery and no real asset exists, prefer this order:
+1. real-user-assets
+2. stock-library
+3. ai-generated
+4. designed-placeholder
 
-Do not improvise a low-quality fallback if an approved archetype is available.
+For hero or key-visual sections, the orchestrator may intentionally prefer AI-generated imagery first.
+
+Only use designed placeholders when the earlier image sources are unavailable or explicitly disallowed.
 
 ## Motion Policy
 
@@ -133,11 +137,13 @@ Before writing code, verify:
 - all required prompt inputs are present
 - the page spec is clear
 - content states are mapped section by section
+- image source plan is known section by section
 - allowed visual archetypes and motion tokens are known
 
 During implementation:
 - build only the assigned page
 - preserve project conventions
+- do not assume git, repositories, branches, or worktrees
 - extract only clearly reusable page sections/components
 - avoid unrelated refactors
 
