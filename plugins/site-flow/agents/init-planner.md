@@ -23,6 +23,12 @@ This agent should create:
 
 ## Required Inputs From the Orchestrator
 
+The orchestrator should pass these inputs from four staged discovery groups:
+1. base website questions
+2. optional email / Listmonk questions
+3. optional booking / calendar questions
+4. optional multilingual questions
+
 The orchestrator must provide:
 1. Project name
 2. Site type
@@ -38,15 +44,11 @@ The orchestrator must provide:
    - form factor if known
    - integration status: `planned | configured`
    - when provider is `listmonk`, public integration details only:
-     - `integration_mode`
      - `base_url`
-     - `public_signup_url`
-     - `list_name`
-     - `list_id` if known
-     - `fields`: `email-only | name-and-email`
-     - `success_behavior`: `inline-message | redirect`
-     - `redirect_url` if any
-     - whether consent / double opt-in copy should appear
+     - `public_signup_url` or public subscription endpoint path
+     - `list_name` or `list_id` if known
+     - `opt_in`: `single | double` if known
+     - whether the user wants to paste the values now or edit the generated config later
 9. Optional booking / calendar decision, if any
    - mode: `design-only | planned | configured`
    - provider: `calendly | google-calendar | other | undecided`

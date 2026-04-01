@@ -57,6 +57,13 @@ Ask in one batch:
    - I’ll trust your recommendations
    - I have logo / brand assets
 
+Discovery batching rule:
+- Batch 1: base website questions only
+- Batch 2: optional email/Listmonk questions only if email support is needed
+- Batch 3: optional booking/calendar questions only if booking support is needed
+- Batch 4: optional multilingual questions only if multilingual support is needed
+- Do not combine multiple optional feature areas into one AskUserQuestion batch.
+
 If the user provides reference URLs, use `WebFetch` to extract:
 - color tendencies
 - typography mood
@@ -90,6 +97,8 @@ Present 3-4 style directions matched to the user’s business type and reference
 Present 2-3 palette choices with compact preview blocks.
 
 ### 2d. Ask About Optional Email Signup
+Run this as a separate AskUserQuestion batch after the base website questions are complete.
+
 Ask one simple non-technical question before generating planning artifacts:
 - Does this website need newsletter or email signup?
 
@@ -97,25 +106,29 @@ If yes, ask follow-ups in plain language:
 - Is this just for the page design right now, or should the project plan for a real email service later?
 - If they already know the provider, ask whether they want to plan around `Listmonk`, another service, or leave it undecided.
 
-If the user chooses `Listmonk`, ask one more simple batch using only public, browser-safe details:
-- How should signups work: `hosted-form`, `embedded-action`, or `api-proxy`?
-- What public Listmonk web address should the site use?
-- If they already know it, what public signup URL or form URL should the site submit to or link to?
-- What signup destination should this use: list name and, if known, list ID?
-- Should the form collect `email only` or `name and email`?
-- After signup, should the site show an inline success message or send people to a thank-you page?
-- Should the signup copy include a short consent / double opt-in note?
+If the user chooses `Listmonk`, ask one practical batch using only public integration details:
+- What is the Listmonk URL?
+- What public subscription endpoint or public signup URL should the site use?
+- What list UUID or public list identifier should this use?
+- If they know it, is the opt-in style `single` or `double`?
+- Do they want to paste these values now, or edit the generated config file later?
 
 Rules:
+- Keep this focused on Listmonk integration details, not a generic signup-form design interview.
 - Never ask for API keys, admin tokens, SMTP credentials, or secrets.
 - If the user only knows part of the setup, keep the integration in `planned` status rather than pretending it is fully wired.
-- Use `configured` only when the user has supplied enough public signup details for the page build to render a real Listmonk integration.
+- Use `configured` only when the user has supplied enough public Listmonk details for the page build to render a real Listmonk integration.
+- If the user does not already have public Listmonk details handy, stop after enough information to mark the feature as `planned`.
+- Tell the user they can also edit the generated config file directly later if that is easier.
 
 Keep this optional.
 - If the user does not need email signup, do not force empty integration placeholders into the project config.
 - If the user wants signup, decide likely capture locations such as homepage hero CTA, footer signup, contact page, or a dedicated signup block.
 
 ### 2e. Ask About Optional Booking / Calendar
+Run this as a separate AskUserQuestion batch only after the optional email/Listmonk batch is complete.
+Do not combine booking/calendar follow-ups with email or multilingual follow-ups.
+
 Ask one simple non-technical question before generating planning artifacts:
 - Does this website need appointment booking or calendar scheduling?
 
@@ -127,6 +140,7 @@ If yes, ask follow-ups in plain language:
 - If they already have it, what public booking URL or embed URL should the site use?
 
 Rules:
+- Keep this independent from the Listmonk wording and config collection.
 - Never ask for API keys, admin tokens, or secrets.
 - If the user only wants the booking experience represented visually, use `design-only`.
 - If the user wants the site planned around a future real booking service but has not supplied enough public setup details, use `planned`.
@@ -137,13 +151,15 @@ Keep this optional.
 - If the user wants booking, decide likely capture locations such as homepage hero CTA, contact page, a dedicated booking block, or a footer CTA.
 
 ### 2f. Ask About Multilingual Support
+Run this as the final optional AskUserQuestion batch after the email and booking decisions are complete.
+Keep this batch lightweight.
+
 Ask one simple non-technical question before generating planning artifacts:
 - Does this website need more than one language?
 
 If yes, ask follow-ups in plain language:
 - What should the main/default language be?
-- Should the workflow prepare for adding one new language at a time later?
-- If they already know a likely next language, note it for planning only.
+- If they already know a likely next language, what is it?
 
 Rules:
 - Do not force the user to supply all translated content during initialization.
