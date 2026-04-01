@@ -38,9 +38,9 @@ The orchestrator must provide all of the following directly in the prompt:
 14. **Imagery kind per section** — `photo | illustration | abstract-brand-graphic | logo-strip | ui-mockup`
 15. **Placeholder policy per section** — whether placeholders are allowed and whether they are temporary only
 16. **Finish cues** — what makes the page feel visually complete instead of scaffold-like
-17. **Email-signup requirements only when relevant** — provider-specific integration requirements if this page includes an email capture surface; when provider is `listmonk`, include integration status, integration mode, public signup target, required fields, success behavior, and signup copy file mapping
+17. **Email/messages/updates requirements only when relevant** — provider-specific integration requirements if this page includes an email support surface; when provider is `listmonk`, use the generated integration config file as the source of truth for public endpoint, list, opt-in, and copy file mapping
 18. **Language context when multilingual support is enabled** — target language, default language, language-specific content root, and fallback language if configured
-19. **Booking/calendar requirements only when relevant** — provider, integration status, interaction type, public booking target, embed target if any, and booking copy file mapping when this page includes a booking surface
+19. **Booking/calendar requirements only when relevant** — provider, integration status, interaction type, public booking target, embed target if any, and booking copy file mapping when this page includes a booking surface; use the generated calendar config file as the source of truth
 
 Minimum expected `Content State Map` format:
 
@@ -61,7 +61,7 @@ Image Source Plan:
 
 If this structure is missing or incomplete, stop and rely on the rest of the orchestrator prompt only where it is unambiguous. Do not invent hidden state categories.
 
-If Listmonk is selected for this page, do not silently replace it with a provider-neutral newsletter form. Use the supplied provider-specific data, or record that the provider wiring is still only planned.
+If Listmonk is selected for this page, do not silently replace it with a provider-neutral email/messages surface. Use the supplied provider-specific config data, or record that the provider wiring is still only planned.
 
 If required visual inputs are missing for a section marked `required`, do not downgrade that section to a generic placeholder block. Preserve the quality bar and surface the missing input in the completion report.
 
@@ -177,8 +177,8 @@ During implementation:
 - extract only clearly reusable page sections/components
 - avoid unrelated refactors
 - preserve or improve design richness; do not simplify a section into a placeholder shell
-- if the page includes Listmonk signup and the integration status is `configured`, render the provider-specific action/link target, field set, and success behavior instead of a generic newsletter form
-- if the page includes Listmonk signup and the integration status is `planned`, keep the intended signup experience visible but record that provider wiring is still incomplete
+- if the page includes Listmonk-backed email support and the integration status is `configured`, render the provider-specific action/link target and success behavior instead of a generic email form
+- if the page includes Listmonk-backed email support and the integration status is `planned`, keep the intended email/messages or updates experience visible but record that provider wiring is still incomplete
 - if the page includes booking/calendar and the integration status is `configured`, preserve the provider-specific booking action or embed target instead of a generic contact CTA
 - if the page includes booking/calendar and the integration status is `planned`, keep the intended booking experience visible but record that provider wiring is still incomplete
 - when multilingual support is enabled, build only the assigned page for the target language

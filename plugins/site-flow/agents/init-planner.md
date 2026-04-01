@@ -13,7 +13,8 @@ Generate the initialization planning artifacts and `content/` structure while ke
 
 This agent should create:
 - `.site/config.json`
-- `.site/integrations/listmonk.json` when Listmonk is the selected provider
+- `.site/integrations/listmonk.json` when Listmonk support is selected
+- `.site/integrations/calendar.json` when booking/calendar support is enabled
 - `.site/workflow-state.json`
 - `.site/design-tokens.md`
 - `.site/site-blueprint.md`
@@ -37,26 +38,20 @@ The orchestrator must provide:
 5. Chosen tech stack
 6. Content profile and seed mode
 7. Image strategy and image profile
-8. Optional email-signup decision, if any
+8. Optional email-support decision, if any
    - mode: `design-only | planned | configured`
    - provider: `listmonk | other | undecided`
    - likely capture locations
-   - form factor if known
+   - surface type: `messages | updates | both`
    - integration status: `planned | configured`
-   - when provider is `listmonk`, public integration details only:
-     - `base_url`
-     - `public_signup_url` or public subscription endpoint path
-     - `list_name` or `list_id` if known
-     - `opt_in`: `single | double` if known
-     - whether the user wants to paste the values now or edit the generated config later
+   - do not expect real provider connection details from chat; generate an editable integration config template instead
 9. Optional booking / calendar decision, if any
    - mode: `design-only | planned | configured`
    - provider: `calendly | google-calendar | other | undecided`
    - likely capture locations
    - interaction type: `link-out | embed | popup`
-   - form factor if known
-   - public booking URL or embed URL only when available
    - integration status: `planned | configured`
+   - do not expect real provider connection details from chat; generate an editable integration config template instead
 10. Multilingual decision, if any
    - i18n enabled: `true | false`
    - default language
@@ -77,9 +72,9 @@ For each page, return a compact manifest like:
 - referenced `content/` files
 - default content state by section
 - image source preference by section
-- whether the page includes email signup
+- whether the page includes email support
 - whether the page includes booking/calendar
-- when relevant, whether the page includes Listmonk signup and whether it is `planned` or `configured`
+- when relevant, whether the page includes Listmonk-backed email support and whether it is `planned` or `configured`
 - when multilingual support is enabled, the default-language content path for that page
 
 ## Rules
@@ -87,16 +82,17 @@ For each page, return a compact manifest like:
 - Keep full content generation inside the agent.
 - Do not flood the parent conversation with generated content files.
 - Preserve the non-technical product tone.
-- If email signup is not enabled, omit email-service config entirely.
-- If email signup is enabled, reflect it only in relevant blueprint/page-spec/content outputs.
+- If email support is not enabled, omit email-service config entirely.
+- If email support is enabled, reflect it only in relevant blueprint/page-spec/content outputs.
 - If booking/calendar is not enabled, omit calendar-service config entirely.
 - If booking/calendar is enabled, reflect it only in relevant blueprint/page-spec/content outputs.
-- If provider is `listmonk`, create `.site/integrations/listmonk.json` with public integration details only.
-- Do not put provider secrets or low-level service credentials into `.site/config.json`, `.site/integrations/listmonk.json`, or `content/`.
-- Generate editable signup copy only where relevant, such as heading, helper text, CTA label, consent note, and success/failure copy.
+- If provider is `listmonk`, create `.site/integrations/listmonk.json` as an editable config template with public integration fields only.
+- If booking/calendar support is enabled, create `.site/integrations/calendar.json` as an editable config template with public integration fields only.
+- Do not put provider secrets or low-level service credentials into `.site/config.json`, `.site/integrations/listmonk.json`, `.site/integrations/calendar.json`, or `content/`.
+- Generate editable email/messages/updates copy only where relevant.
 - Generate editable booking/calendar CTA copy only where relevant.
-- When provider is `listmonk`, create page-local signup copy files only on relevant capture pages and shared locations.
-- Distinguish clearly between `planned` and `configured`: use `configured` only when there is enough public signup information for page build to render a real provider-specific integration.
+- When provider is `listmonk`, create page-local email/messages/updates copy files only on relevant capture pages and shared locations.
+- Distinguish clearly between `planned` and `configured`: use `configured` only when the integration config files contain enough public information for page build to render a real provider-specific integration.
 - When multilingual support is enabled, organize content as `content/{lang}/{page}/...`.
 - Prefer using the default language folder even when only one language exists at initialization time.
 - Do not create duplicated page templates per language.
@@ -107,8 +103,9 @@ The generated artifacts must leave `/site-flow:site-build` able to build pages u
 
 That means:
 - every page spec must point to its own `content/` files
-- relevant signup sections must be represented only on applicable pages
+- relevant email/messages/updates sections must be represented only on applicable pages
 - relevant booking/calendar sections must be represented only on applicable pages
-- when provider is `listmonk`, the integration artifact must exist and point to public signup details only
+- when provider is `listmonk`, the integration artifact must exist as an editable config template and later contain public integration details only
+- when booking/calendar support is enabled, the calendar integration artifact must exist as an editable config template
 - when multilingual support is enabled, every page spec must point to the default language content path
 - the orchestrator should be able to read only the target page’s content files later

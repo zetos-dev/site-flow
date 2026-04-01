@@ -30,7 +30,7 @@ Read these when present:
 - `.site/content-guide.md`
 - `.site/validation-report.md`
 
-Use `.site/config.json` as the source of truth for optional feature choices such as email signup, booking/calendar support, and multilingual settings.
+Use `.site/config.json` as the source of truth for optional feature choices such as email support, booking/calendar support, and multilingual settings.
 
 Use Glob to find:
 - `.site/page-*-completion-report.md`
@@ -48,12 +48,13 @@ Determine:
 - whether residue warnings exist
 - whether validation passed
 - content readiness by page
-- whether optional email signup is disabled, design-only, or planned/configured with a provider
+- whether optional email support is disabled, design-only, or planned/configured with a provider
 - whether optional booking/calendar is disabled, design-only, or planned/configured with a provider
 - whether multilingual support is disabled, reserved, or active
 - default language and currently supported languages
 - whether any translated page content appears missing or incomplete
 - whether `.site/integrations/listmonk.json` exists when Listmonk is selected
+- whether `.site/integrations/calendar.json` exists when booking/calendar support is enabled
 - whether Listmonk wiring appears planned, configured, or broken
 - whether agent-first execution was used or fallback was used
 - whether any main-session execution violations were recorded
@@ -86,11 +87,12 @@ Environment: {ready / needs setup / not checked yet}
 Missing tools: {none / Node.js / npm / npx}
 Delegation: {agent-used / fallback-used / issue found}
 Last fallback: {none / reason summary}
-Email Signup: {not planned / design-only / planned with Listmonk / configured with Listmonk / planned with other service}
+Email Support: {not planned / design-only / planned with Listmonk / configured with Listmonk / planned with other service}
 Listmonk Artifact: {n/a / present / missing}
-Signup Wiring: {n/a / planned / configured / broken}
+Email Wiring: {n/a / planned / configured / broken}
 Calendar Booking: {not planned / design-only / planned / configured}
-Calendar Provider: {n/a / Calendly / Google Calendar / other / undecided}
+Calendar Artifact: {n/a / present / missing}
+Calendar Wiring: {n/a / planned / configured / broken}
 Languages: {zh / zh, en / not enabled}
 Default Language: {zh / n/a}
 Translation Mode: {manual-assisted / n/a}
@@ -143,8 +145,8 @@ Show:
 - content state by section
 - what kind of imagery is being used
 - whether real images are present
-- whether the page includes email signup and what mode/provider is planned if relevant
-- whether the page includes Listmonk signup, whether the integration artifact exists, and whether the page looks planned, configured, or broken
+- whether the page includes email support and what mode/provider is planned if relevant
+- whether the page includes Listmonk-backed email support, whether the integration artifact exists, and whether the page looks planned, configured, or broken
 - whether the page includes booking/calendar and what mode/provider is planned if relevant
 - which languages currently have content for this page
 - whether any language version looks missing or incomplete

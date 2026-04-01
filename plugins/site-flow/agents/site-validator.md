@@ -42,10 +42,11 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - no generic “your company” filler unless explicitly requested
 - seeded-demo coverage is coherent
 - placeholder-minimal use is justified and reported
-- if email signup is enabled, signup copy and placement appear only on relevant pages/sections
+- if email support is enabled, message/update copy and placement appear only on relevant pages/sections
 - if booking/calendar is enabled, booking copy and placement appear only on relevant pages/sections
 - if multilingual support is enabled, the active language is clear and localized copy is not silently mixed with another language unless fallback is explicitly allowed
-- if provider is `listmonk`, `.site/integrations/listmonk.json` exists and contains public signup details only
+- if provider is `listmonk`, `.site/integrations/listmonk.json` exists and contains public integration details only
+- if booking/calendar support is enabled, `.site/integrations/calendar.json` exists and contains public integration details only
 
 ### Visual completeness
 - required visual sections have valid image state recorded
@@ -60,11 +61,11 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - the site demonstrates visible design richness rather than a bare scaffold
 
 ### Email integration
-- if provider is `listmonk`, signup appears only on configured capture locations
-- if provider is `listmonk` and status is `configured`, built pages contain provider-specific Listmonk action/link targets and matching fields
+- if provider is `listmonk`, email support appears only on configured capture locations
+- if provider is `listmonk` and status is `configured`, built pages contain provider-specific Listmonk public endpoint or action/link targets and matching copy
 - if provider is `listmonk` and status is `planned`, the report must warn that provider wiring is incomplete rather than passing silently
-- generic provider-neutral signup markup on a Listmonk page counts as a failure when enough provider-specific data exists
-- mismatched fields, broken public signup targets, or missing integration artifacts count as failures
+- generic provider-neutral email/message markup on a Listmonk-backed page counts as a failure when enough provider-specific config data exists
+- mismatched public targets or missing integration artifacts count as failures
 
 ### Booking/calendar integration
 - if booking/calendar is enabled, booking appears only on configured capture locations
@@ -80,8 +81,8 @@ Verify that the generated site is built, coherent, visually complete, and consis
 ## Outcome Rules
 
 - `passed`: site feels finished and no blocked visual issues, broken provider wiring, broken booking wiring, mixed-language regressions, or hidden execution violations remain
-- `warning`: site is usable and fallback execution was acceptable, but non-blocking visual debt, planned-only signup wiring, planned-only booking wiring, or partial localization should still be noted
-- `failed`: required visuals are incomplete, scaffold-like output remains, provider-specific signup or booking wiring is broken or missing where expected, fallback/reporting is inconsistent, user-facing git/worktree prerequisites leaked into the workflow, or the active language output is materially incomplete
+- `warning`: site is usable and fallback execution was acceptable, but non-blocking visual debt, planned-only email wiring, planned-only booking wiring, or partial localization should still be noted
+- `failed`: required visuals are incomplete, scaffold-like output remains, provider-specific email or booking wiring is broken or missing where expected, fallback/reporting is inconsistent, user-facing git/worktree prerequisites leaked into the workflow, or the active language output is materially incomplete
 
 ## Report Requirements
 

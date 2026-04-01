@@ -68,9 +68,9 @@ If the site is using seeded demo content, say so clearly:
 
 If `.site/validation-report.md` exists, summarize any active warnings.
 
-If the project uses Listmonk signup, explain that clearly too:
-- whether the page is already wired to a real Listmonk public signup target
-- whether the current signup experience is only planned and still missing public wiring details
+If the project uses Listmonk-backed email support, explain that clearly too:
+- whether the page is already wired to a real Listmonk public endpoint or updates target
+- whether the current email/messages or updates experience is only planned and still missing public wiring details
 - whether any Listmonk integration warnings are active
 
 If the project uses booking/calendar support, explain that clearly too:
@@ -133,9 +133,10 @@ Provide:
 - user feedback
 - whether the affected content is real, seeded-demo, or placeholder-minimal
 - current visual state and image source by section
-- email-signup requirements only when the affected page includes email capture
-- Listmonk integration details when the affected page includes Listmonk signup
+- email/messages/updates requirements only when the affected page includes an email support surface
+- Listmonk integration details from the generated config file when the affected page includes Listmonk-backed email support
 - booking/calendar requirements only when the affected page includes a booking surface
+- calendar integration details from the generated config file when the affected page includes booking/calendar support
 - language context when multilingual support is enabled
 - any validation warnings for missing imagery, weak placeholders, lack of design richness, incomplete provider wiring, or incomplete localization
 
@@ -145,7 +146,7 @@ Rules:
 - keep responsive behavior intact
 - keep within approved motion/design system unless the user explicitly wants a broader restyle
 - improve design completeness when the user calls out weak visuals, missing imagery, or placeholder-looking sections
-- preserve provider-specific signup wiring when the page includes Listmonk
+- preserve provider-specific email/update wiring when the page includes Listmonk
 - preserve provider-specific booking action or embed behavior when the page includes booking/calendar
 - when multilingual support is enabled, keep edits scoped to the active language unless the user explicitly asks for broader language updates
 - only load the affected page's content inputs and any directly relevant shared content
