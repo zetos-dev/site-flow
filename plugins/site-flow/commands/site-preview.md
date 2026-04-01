@@ -4,23 +4,23 @@ argument-hint: ""
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion]
 ---
 
-# /site-preview — Preview & Iterate
+# /site-flow:site-preview — Preview & Iterate
 
 You are helping a non-technical user preview their website and make adjustments based on feedback.
 
 ## Pre-check
 
-1. Read `.site/config.json` — if missing, tell the user to run `/site-init` first.
+1. Read `.site/config.json` — if missing, tell the user to run `/site-flow:site-init` first.
 2. Read `.site/workflow-state.json` if present.
 3. Check that at least one page has been built.
-4. If no pages are built, tell the user to run `/site-build` first.
+4. If no pages are built, tell the user to run `/site-flow:site-build` first.
 5. Check environment readiness before starting any preview server.
 
 If the chosen stack needs Node.js/npm and they are missing:
 - explain this in plain language
 - do not attempt preview commands yet
 - tell the user what to install
-- tell them to rerun `/site-preview` or `/site-build` after installation
+- tell them to rerun `/site-flow:site-preview` or `/site-flow:site-build` after installation
 
 ## Phase 1 — Start Preview Server
 
@@ -118,6 +118,7 @@ Provide:
 - user feedback
 - whether the affected content is real, seeded-demo, or placeholder-minimal
 - current visual state and image source by section
+- email-signup requirements only when the affected page includes email capture
 - any validation warnings for missing imagery, weak placeholders, or lack of design richness
 
 Rules:
@@ -126,6 +127,7 @@ Rules:
 - keep responsive behavior intact
 - keep within approved motion/design system unless the user explicitly wants a broader restyle
 - improve design completeness when the user calls out weak visuals, missing imagery, or placeholder-looking sections
+- only load the affected page's content inputs and any directly relevant shared content
 - if the helper agent cannot launch, apply only the same narrowly scoped change as `main-session-fallback` and record the fallback reason
 
 ## Phase 5 — Feedback Loop
@@ -144,7 +146,7 @@ When discussing content, distinguish clearly between:
 
 When the user is happy:
 1. update managed state to reflect review completion
-2. mention that demo-ready content can be replaced later via `content/` and `/site-build --update`
+2. mention that demo-ready content can be replaced later via `content/` and `/site-flow:site-build --update`
 3. ask whether to keep the preview server running
 
 Output guidance like:
@@ -157,7 +159,7 @@ You can keep refining it in two ways:
 - replace demo content with your real text and images
 
 When you update files in content/, run:
-  /site-build --update
+  /site-flow:site-build --update
 ```
 
 ## Key Principles

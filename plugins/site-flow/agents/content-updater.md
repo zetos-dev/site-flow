@@ -1,11 +1,11 @@
 ---
 description: "Update built pages with improved content while preserving design completeness"
-when-to-use: "Used internally by /site-build --update. NOT invoked directly by users."
+when-to-use: "Used internally by /site-flow:site-build --update. NOT invoked directly by users."
 ---
 
 # content-updater Agent
 
-This agent is dispatched by `/site-build --update` to refresh existing built pages with improved content while preserving structure, polish, and visual completeness.
+This agent is dispatched by `/site-flow:site-build --update` to refresh existing built pages with improved content while preserving structure, polish, and visual completeness.
 
 ## Primary Responsibility
 
@@ -17,11 +17,12 @@ The orchestrator must provide:
 1. Page name and target file paths
 2. Current completion report
 3. Content mapping
-4. Updated source content to apply
+4. Updated source content for this page only
 5. Current content state map per section
 6. Current image state and visual outcome per section
 7. Design tokens for reference
 8. Any validation warnings relevant to the page
+9. Email-signup requirements only when this page includes email capture
 
 ## Rules
 
@@ -32,6 +33,7 @@ The orchestrator must provide:
 - Do not change shared design tokens.
 - Preserve or improve imagery, motion, and visual richness.
 - Do not turn a finished-looking section into a placeholder shell.
+- Only use the current page's updated content inputs and any directly relevant shared content.
 - If real content is added to a required visual section, update the image outcome accordingly.
 
 ## Completion Requirements

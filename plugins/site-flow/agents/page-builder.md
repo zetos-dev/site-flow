@@ -1,11 +1,11 @@
 ---
 description: "Build individual website pages with professional design quality"
-when-to-use: "Used internally by /site-build to construct each page. NOT invoked directly by users."
+when-to-use: "Used internally by /site-flow:site-build to construct each page. NOT invoked directly by users."
 ---
 
 # page-builder Agent
 
-This agent is dispatched by `/site-build` to build one page at a time. It is a required execution agent for page implementation, not a user interaction agent.
+This agent is dispatched by `/site-flow:site-build` to build one page at a time. It is a required execution agent for page implementation, not a user interaction agent.
 
 ## Primary Responsibility
 
@@ -27,7 +27,7 @@ The orchestrator must provide all of the following directly in the prompt:
 3. **Complete page specification** — paste full `page-spec-{slug}.md`
 4. **Content mapping** — which content file maps to which page section
 5. **Content state map** — per section: `real | seeded-demo | placeholder-minimal`
-6. **Actual content** — paste the source material to use
+6. **Actual content for this page only** — paste only the source material for the target page and any directly relevant shared content
 7. **Allowed visual archetypes** for image-heavy sections
 8. **Allowed motion tokens** for this page
 9. **Pattern references** — specific existing files to match where relevant
@@ -38,6 +38,7 @@ The orchestrator must provide all of the following directly in the prompt:
 14. **Imagery kind per section** — `photo | illustration | abstract-brand-graphic | logo-strip | ui-mockup`
 15. **Placeholder policy per section** — whether placeholders are allowed and whether they are temporary only
 16. **Finish cues** — what makes the page feel visually complete instead of scaffold-like
+17. **Email-signup requirements only when relevant** — provider/mode/placement guidance only if this page includes an email capture surface
 
 Minimum expected `Content State Map` format:
 

@@ -4,7 +4,7 @@ argument-hint: "[page-name]"
 allowed-tools: [Read, Glob]
 ---
 
-# /site-status — Website Project Status
+# /site-flow:site-status — Website Project Status
 
 Show the user a clear, friendly overview of their website project.
 
@@ -19,7 +19,7 @@ If missing, output:
 
 ```text
 No website project found in this directory.
-Run /site-init to start a new website project.
+Run /site-flow:site-init to start a new website project.
 ```
 
 Then exit.
@@ -29,6 +29,8 @@ Read these when present:
 - `.site/site-blueprint.md`
 - `.site/content-guide.md`
 - `.site/validation-report.md`
+
+Use `.site/config.json` as the source of truth for optional feature choices such as email signup.
 
 Use Glob to find:
 - `.site/page-*-completion-report.md`
@@ -46,6 +48,7 @@ Determine:
 - whether residue warnings exist
 - whether validation passed
 - content readiness by page
+- whether optional email signup is disabled, design-only, or planned with a provider
 - whether agent-first execution was used or fallback was used
 - whether any main-session execution violations were recorded
 - the latest fallback reason if present
@@ -77,6 +80,7 @@ Environment: {ready / needs setup / not checked yet}
 Missing tools: {none / Node.js / npm / npx}
 Delegation: {agent-used / fallback-used / issue found}
 Last fallback: {none / reason summary}
+Email Signup: {not planned / design-only / planned with Listmonk / planned with other service}
 
 Progress: [{progress_bar}] {built_pages}/{total_pages} pages
 Bootstrap: {complete / pending}
@@ -125,6 +129,7 @@ Show:
 - content state by section
 - what kind of imagery is being used
 - whether real images are present
+- whether the page includes email signup and what mode/provider is planned if relevant
 - whether the page still has placeholder debt or scaffold-like sections
 - what should be replaced next for best impact
 

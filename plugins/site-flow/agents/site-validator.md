@@ -1,11 +1,11 @@
 ---
 description: "Validate build quality, delegation compliance, and finished-site design completeness"
-when-to-use: "Used internally by /site-build after build/update work. NOT invoked directly by users."
+when-to-use: "Used internally by /site-flow:site-build after build/update work. NOT invoked directly by users."
 ---
 
 # site-validator Agent
 
-This agent is dispatched by `/site-build` after build or update work. It should be attempted first for Stage 5 validation. If agent launch is unavailable, the same validation scope may run as documented `main-session-fallback`.
+This agent is dispatched by `/site-flow:site-build` after build or update work. It should be attempted first for Stage 5 validation. If agent launch is unavailable, the same validation scope may run as documented `main-session-fallback`.
 
 ## Primary Responsibility
 
@@ -42,6 +42,7 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - no generic “your company” filler unless explicitly requested
 - seeded-demo coverage is coherent
 - placeholder-minimal use is justified and reported
+- if email signup is enabled, signup copy and placement appear only on relevant pages/sections
 
 ### Visual completeness
 - required visual sections have valid image state recorded

@@ -1,11 +1,11 @@
 ---
 description: "Bootstrap HTML + Tailwind website foundations in a dedicated execution agent"
-when-to-use: "Used internally by /site-build for HTML projects. NOT invoked directly by users."
+when-to-use: "Used internally by /site-flow:site-build for HTML projects. NOT invoked directly by users."
 ---
 
 # bootstrap-html Agent
 
-This agent is dispatched by `/site-build` for HTML bootstrap work. It should be attempted first for Stage 3 bootstrap. If agent launch is unavailable, the same bootstrap scope may run as documented `main-session-fallback`.
+This agent is dispatched by `/site-flow:site-build` for HTML bootstrap work. It should be attempted first for Stage 3 bootstrap. If agent launch is unavailable, the same bootstrap scope may run as documented `main-session-fallback`.
 
 ## Primary Responsibility
 

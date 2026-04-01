@@ -4,7 +4,7 @@ argument-hint: "[project-directory]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion, WebFetch]
 ---
 
-# /site-init — Website Project Initialization
+# /site-flow:site-init — Website Project Initialization
 
 You are guiding a **non-technical user** through setting up a professional static website. Use everyday language. Avoid frontend jargon unless absolutely necessary.
 
@@ -17,7 +17,7 @@ This workflow should help the user see something close to a finished website ear
 Default behavior:
 - use `demo-ready` seeded content unless the user clearly wants sparse placeholders
 - prefer real-looking default imagery first: stock-library for most sections, AI-generated images for key visuals when available, and designed placeholders only as fallback
-- make the generated plan coherent enough that `/site-build` can produce polished pages without asking for lots of materials first
+- make the generated plan coherent enough that `/site-flow:site-build` can produce polished pages without asking for lots of materials first
 - require visual richness: imagery, motion, hierarchy, depth, and deliberate composition should make the site feel like a finished design, not a scaffold
 - treat gradient placeholder boxes and empty visual frames as failure states for design-heavy sections unless the page spec explicitly allows an abstract finished graphic treatment
 
@@ -89,9 +89,23 @@ Present 3-4 style directions matched to the user’s business type and reference
 ### 2c. Recommend Color Palette
 Present 2-3 palette choices with compact preview blocks.
 
+### 2d. Ask About Optional Email Signup
+Ask one simple non-technical question before generating planning artifacts:
+- Does this website need newsletter or email signup?
+
+If yes, ask follow-ups in plain language:
+- Is this just for the page design right now, or should the project plan for a real email service later?
+- If they already know the provider, ask whether they want to plan around `Listmonk`, another service, or leave it undecided.
+
+Keep this optional.
+- If the user does not need email signup, do not force empty integration placeholders into the project config.
+- If the user wants signup, decide likely capture locations such as homepage hero CTA, footer signup, contact page, or a dedicated signup block.
+
 ## Phase 3 — Planning Outputs
 
 After confirmation, generate the planning artifacts.
+
+Prefer a focused sub-agent for this planning/content generation stage so the main conversation stays lean. Attempt `plugins/site-flow/agents/init-planner.md` first. If the agent cannot launch, continue in the current session as documented fallback.
 
 ### 3a. Determine Tech Stack Automatically
 - 1-2 pages: `html-tailwind`
@@ -121,9 +135,22 @@ Required fields:
   "bootstrap_strategy": "in-place",
   "image_strategy": "hybrid",
   "image_sources": ["real-user-assets", "stock-library", "ai-generated", "designed-placeholder"],
-  "image_profile": "<industry-appropriate style profile>"
+  "image_profile": "<industry-appropriate style profile>",
+  "optional_features": {
+    "email_service": {
+      "mode": "<design-only|planned|configured>",
+      "provider": "<listmonk|other|undecided>",
+      "capture_locations": ["<homepage-hero|footer|contact|signup-block>"]
+    }
+  }
 }
 ```
+
+Rules:
+- Omit `optional_features.email_service` entirely when email signup is not needed.
+- Use `design-only` when the user only wants the signup experience represented in the design.
+- Use `planned` when the user wants the site planned around a future real provider such as Listmonk.
+- Reserve `configured` for future workflows that support actual service wiring.
 
 ### 3c. Create `.site/workflow-state.json`
 This file tracks build orchestration state.
@@ -144,7 +171,7 @@ Use this exact structure:
     "missing": [],
     "checked_at": null,
     "next_step": "",
-    "resume_command": "/site-build"
+    "resume_command": "/site-flow:site-build"
   },
   "delegation": {
     "policy": "prefer-agent-with-fallback",
@@ -188,7 +215,7 @@ Allowed `stage` values:
 - `blocked`
 
 ### Stage transition rules
-- After `/site-init`: `initialized`
+- After `/site-flow:site-init`: `initialized`
 - While checking local requirements: `environment_checking`
 - If required tools are missing: `environment_blocked`
 - After setup confirms readiness: `environment_ready`
@@ -206,7 +233,7 @@ Allowed `stage` values:
 - `environment_readiness.status`: `pending | checking | ready | blocked`
 - `environment_readiness.missing` should list missing tools like `node`, `npm`, or `npx`
 - `environment_readiness.next_step` should be a plain-language next action for the user
-- `environment_readiness.resume_command` should usually be `/site-build`
+- `environment_readiness.resume_command` should usually be `/site-flow:site-build`
 - `delegation.policy` should be `prefer-agent-with-fallback`
 - `delegation.last_agent` should record the most recent executor agent when one was used
 - `delegation.last_execution_mode` should be `sub-agent | main-session-fallback`
@@ -242,6 +269,7 @@ Describe:
 - shared navigation/footer structure
 - overall conversion path
 - where seeded demo content is acceptable vs where real content is preferred
+- when email signup is enabled, where signup belongs in the funnel and which pages/sections should surface it
 
 ### 3f. Create `.site/content-guide.md`
 This file explains how content and image states work.
@@ -280,6 +308,7 @@ Each page spec must include:
 - allowed motion tokens for the page
 - accessibility / responsiveness notes
 - finish cues for how the page should feel visually complete
+- when email signup is enabled, section-level email capture requirements only on relevant pages
 
 Use this structure:
 
@@ -329,6 +358,16 @@ Pre-fill them with either:
 
 Never use lorem ipsum.
 
+The planning/content generation stage should prefer a focused sub-agent.
+- The sub-agent may generate the full `content/` tree and page specs.
+- The main session should receive a concise per-page content manifest instead of pasting large content bodies back into the conversation.
+- For each page, summarize only:
+  - page slug
+  - section names
+  - referenced `content/` files
+  - default content state by section
+  - image source preference by section
+
 ## Seeded Demo Content Rules
 
 Default seed mode is `demo-ready`.
@@ -366,7 +405,7 @@ Design rule:
 - a deliberate graphic composition can count as complete
 - a blank gradient rectangle or empty frame cannot
 
-The planning outputs should set `/site-build` up to produce a visually rich site with imagery, motion, hierarchy, and polish rather than a basic shell.
+The planning outputs should set `/site-flow:site-build` up to produce a visually rich site with imagery, motion, hierarchy, and polish rather than a basic shell.
 
 ### Motion
 Define a restrained motion system using named tokens such as:

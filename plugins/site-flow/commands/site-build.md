@@ -4,13 +4,13 @@ argument-hint: "[page-name | --update | --all]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Agent, AskUserQuestion]
 ---
 
-# /site-build — Website Build Orchestrator
+# /site-flow:site-build — Website Build Orchestrator
 
 You are the **orchestrator** for building a static website. The main conversation must stay lean: you do orchestration, environment readiness, dependency installation/setup, state checks, sub-agent dispatch, fallback coordination, report aggregation, and user communication. Bootstrap, page implementation, content refreshes, design revisions, and validation should be attempted in focused sub-agents first, with graceful in-session fallback when agent launch is unavailable. Do not make the workflow depend on git or worktrees.
 
 **Arguments**: $ARGUMENTS
 - No argument: Build the next pending page
-- `<page-name>`: Build a specific page (e.g. `/site-build about`)
+- `<page-name>`: Build a specific page (e.g. `/site-flow:site-build about`)
 - `--update`: Re-read `content/` and update built pages with newer content only
 - `--all`: Build all pending pages sequentially
 
@@ -37,7 +37,7 @@ Do not assume git, branches, repositories, or worktrees. The normal workflow mus
 
 ## Pre-check
 
-1. Read `.site/config.json` — if missing, tell the user: `No website project found. Run /site-init first.`
+1. Read `.site/config.json` — if missing, tell the user: `No website project found. Run /site-flow:site-init first.`
 2. Read `.site/site-blueprint.md`
 3. Read `.site/design-tokens.md`
 4. If `.site/workflow-state.json` exists, read it. If it does not exist, infer state from project files and continue.
@@ -63,7 +63,7 @@ Use this structure:
     "missing": [],
     "checked_at": null,
     "next_step": "",
-    "resume_command": "/site-build"
+    "resume_command": "/site-flow:site-build"
   },
   "delegation": {
     "policy": "prefer-agent-with-fallback",
@@ -235,6 +235,8 @@ Inputs you must use:
 - Current content states per section: real / seeded-demo / placeholder-minimal
 - Relevant design tokens for reference only
 - Current image state and visual strategy per section
+- Updated source content for the current page only
+- Email-signup requirements only when the page includes an email capture surface
 ```
 
 Then continue to **Validation Stage**.
@@ -266,7 +268,7 @@ This is the only execution stage that may run entirely in the main session.
 
 ### Example blocked guidance
 - "Before I can build this website, this computer needs Node.js and npm."
-- "Install Node.js, then run `/site-build` again and I will continue from here."
+- "Install Node.js, then run `/site-flow:site-build` again and I will continue from here."
 
 Only after readiness is confirmed should the workflow continue.
 
@@ -368,9 +370,10 @@ For each page:
 2. Read `.site/design-tokens.md`
 3. Read `.site/site-blueprint.md`
 4. Read `.site/content-guide.md` if present
-5. Check `content/{NN}-{page-name}/` for user content
-6. Read 1-2 existing pages/components for established patterns if this is not the first page
-7. Read previous completion reports if relevant
+5. Read `.site/config.json` and check whether optional email signup is enabled and relevant to this page
+6. Check `content/{NN}-{page-name}/` for user content
+7. Read 1-2 existing pages/components for established patterns if this is not the first page
+8. Read previous completion reports if relevant
 
 ### Step 4.2 — Build Structured Inputs
 
@@ -379,6 +382,7 @@ Construct a page-builder prompt that explicitly provides:
 - tech stack
 - complete design tokens
 - complete page specification
+- relevant optional feature decisions from `.site/config.json`
 - content mapping
 - section-by-section content state map: `real | seeded-demo | placeholder-minimal`
 - image source plan per section
@@ -386,6 +390,8 @@ Construct a page-builder prompt that explicitly provides:
 - seeded visual archetypes allowed only as fallback for the page
 - motion token set allowed for the page
 - references to existing patterns
+- actual source material only for the target page
+- email-signup requirements only when this page is one of the configured capture locations
 
 Use this exact input shape inside the prompt:
 
@@ -414,6 +420,7 @@ Image Source Plan:
 
 If a section has no real image, the orchestrator must still provide a preferred image source and a fallback path.
 
+Do not carry the whole site's `content/` corpus in the main conversation context. Only load and inject the current page's referenced content files and any directly relevant shared content.
 
 ### Step 4.3 — Page Builder Agent Rules
 
