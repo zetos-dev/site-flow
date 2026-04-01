@@ -165,6 +165,12 @@ After confirmation, generate the planning artifacts.
 
 Prefer a focused sub-agent for this planning/content generation stage so the main conversation stays lean. Attempt `plugins/site-flow/agents/init-planner.md` first. If the agent cannot launch, continue in the current session as documented fallback.
 
+Execution policy:
+- helper-agent startup must never depend on git
+- if startup fails because the directory is not a repository, has no initial commit, has unresolved `HEAD`, lacks git history, or cannot resolve worktree/base-branch metadata, continue in the current project directory as `main-session-fallback`
+- do not surface git/worktree setup as a user prerequisite
+- record the fallback reason in managed state or reports where applicable, but do not block initialization
+
 ### 3a. Determine Tech Stack Automatically
 - 1-2 pages: `html-tailwind`
 - 3+ pages: `astro-tailwind`

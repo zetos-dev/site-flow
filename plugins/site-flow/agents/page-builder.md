@@ -174,6 +174,7 @@ During implementation:
 - build only the assigned page
 - preserve project conventions
 - do not assume git, repositories, branches, or worktrees
+- missing git history, unresolved `HEAD`, missing base-branch metadata, or absent worktree support must not block page implementation
 - extract only clearly reusable page sections/components
 - avoid unrelated refactors
 - preserve or improve design richness; do not simplify a section into a placeholder shell

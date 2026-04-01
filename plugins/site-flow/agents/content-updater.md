@@ -35,6 +35,8 @@ The orchestrator must provide:
 - Preserve seeded-demo content where no real content has been supplied.
 - Do not redesign unrelated sections.
 - Do not change shared design tokens.
+- Do not assume git, repository history, resolved `HEAD`, or worktree support.
+- If helper startup fails for those reasons, the orchestrator should perform the same scoped update as `main-session-fallback`.
 - Preserve or improve imagery, motion, and visual richness.
 - Do not turn a finished-looking section into a placeholder shell.
 - Only use the current page's updated content inputs and any directly relevant shared content.

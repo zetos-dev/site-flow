@@ -126,6 +126,8 @@ The main session may:
 
 Do not expose git/worktree internals to the user as a prerequisite for continuing preview iteration.
 
+If helper startup fails because git metadata is absent or incomplete, including no repository, no initial commit, unresolved `HEAD`, missing history, or worktree/base-branch lookup failure, continue preview iteration in the current project directory as `main-session-fallback`. These are internal execution details, not user prerequisites.
+
 ### Preview change agent rules
 Provide:
 - current page file(s)

@@ -24,6 +24,9 @@ Run /site-flow:site-init to start a new website project.
 
 Then exit.
 
+Status must be computed from project files and `.site/` artifacts only.
+Never require git history, resolved `HEAD`, branch detection, or worktree metadata to show project status.
+
 Read these when present:
 - `.site/workflow-state.json`
 - `.site/site-blueprint.md`
@@ -177,6 +180,8 @@ Best Next Replacements:
 - Use simple language.
 - Focus on what the user should do next.
 - Prefer actual file signals over stale status flags.
+- Never treat missing git history, unresolved `HEAD`, or absent worktree metadata as a blocked project condition.
+- If delegation metadata shows helper startup failed for git/worktree reasons, report fallback use plainly without implying the user must fix git first.
 - Call out starter residue warnings clearly if any remain.
 - Call out delegation violations clearly if any exist.
 - Treat gradient-box visuals, empty frames, and wireframe-like sections as unfinished design debt.

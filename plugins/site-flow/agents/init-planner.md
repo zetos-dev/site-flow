@@ -82,6 +82,9 @@ For each page, return a compact manifest like:
 - Keep full content generation inside the agent.
 - Do not flood the parent conversation with generated content files.
 - Preserve the non-technical product tone.
+- Do not assume git, repository history, resolved `HEAD`, base-branch metadata, or worktree support.
+- If launched in a directory with no repository or no initial commit, planning remains fully valid.
+- Agent startup failures caused by git/worktree constraints must be treated by the orchestrator as launch-unavailable so it can continue with `main-session-fallback`.
 - If email support is not enabled, omit email-service config entirely.
 - If email support is enabled, reflect it only in relevant blueprint/page-spec/content outputs.
 - If booking/calendar is not enabled, omit calendar-service config entirely.

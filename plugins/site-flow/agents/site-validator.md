@@ -19,6 +19,7 @@ Verify that the generated site is built, coherent, visually complete, and consis
 4. Review content quality and content-state usage.
 5. Review imagery, motion, and design richness.
 6. Produce `.site/validation-report.md`.
+7. Validate from project files and build artifacts only, never from git history, resolved `HEAD`, branch state, or worktree metadata.
 
 ## Check Specifically For
 
