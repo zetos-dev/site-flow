@@ -97,9 +97,59 @@ If yes, ask follow-ups in plain language:
 - Is this just for the page design right now, or should the project plan for a real email service later?
 - If they already know the provider, ask whether they want to plan around `Listmonk`, another service, or leave it undecided.
 
+If the user chooses `Listmonk`, ask one more simple batch using only public, browser-safe details:
+- How should signups work: `hosted-form`, `embedded-action`, or `api-proxy`?
+- What public Listmonk web address should the site use?
+- If they already know it, what public signup URL or form URL should the site submit to or link to?
+- What signup destination should this use: list name and, if known, list ID?
+- Should the form collect `email only` or `name and email`?
+- After signup, should the site show an inline success message or send people to a thank-you page?
+- Should the signup copy include a short consent / double opt-in note?
+
+Rules:
+- Never ask for API keys, admin tokens, SMTP credentials, or secrets.
+- If the user only knows part of the setup, keep the integration in `planned` status rather than pretending it is fully wired.
+- Use `configured` only when the user has supplied enough public signup details for the page build to render a real Listmonk integration.
+
 Keep this optional.
 - If the user does not need email signup, do not force empty integration placeholders into the project config.
 - If the user wants signup, decide likely capture locations such as homepage hero CTA, footer signup, contact page, or a dedicated signup block.
+
+### 2e. Ask About Optional Booking / Calendar
+Ask one simple non-technical question before generating planning artifacts:
+- Does this website need appointment booking or calendar scheduling?
+
+If yes, ask follow-ups in plain language:
+- Is this just for the page design right now, or should the project plan for a real booking service later?
+- If they already know the provider, ask whether they want to plan around `Calendly`, `Google Calendar`, another service, or leave it undecided.
+- How should visitors access booking: `link button`, `embedded section`, or `popup/modal`?
+- Where should this appear: `homepage hero`, `contact page`, `booking section`, or `footer CTA`?
+- If they already have it, what public booking URL or embed URL should the site use?
+
+Rules:
+- Never ask for API keys, admin tokens, or secrets.
+- If the user only wants the booking experience represented visually, use `design-only`.
+- If the user wants the site planned around a future real booking service but has not supplied enough public setup details, use `planned`.
+- Use `configured` only when the user has supplied enough public booking details for the page build to render a real provider-specific booking experience.
+
+Keep this optional.
+- If the user does not need booking, do not force empty integration placeholders into the project config.
+- If the user wants booking, decide likely capture locations such as homepage hero CTA, contact page, a dedicated booking block, or a footer CTA.
+
+### 2f. Ask About Multilingual Support
+Ask one simple non-technical question before generating planning artifacts:
+- Does this website need more than one language?
+
+If yes, ask follow-ups in plain language:
+- What should the main/default language be?
+- Should the workflow prepare for adding one new language at a time later?
+- If they already know a likely next language, note it for planning only.
+
+Rules:
+- Do not force the user to supply all translated content during initialization.
+- Treat the default language as the only required language at init time.
+- Use multilingual planning only as a structure and workflow reservation unless the user explicitly wants translation work now.
+- Prefer a shared-site structure with language-specific content files rather than separate site copies.
 
 ## Phase 3 — Planning Outputs
 
@@ -140,19 +190,95 @@ Required fields:
     "email_service": {
       "mode": "<design-only|planned|configured>",
       "provider": "<listmonk|other|undecided>",
-      "capture_locations": ["<homepage-hero|footer|contact|signup-block>"]
+      "capture_locations": ["<homepage-hero|footer|contact|signup-block>"],
+      "form_factor": "<inline|card|split-band|modal>",
+      "integration_status": "<planned|configured>",
+      "listmonk": {
+        "integration_mode": "<hosted-form|embedded-action|api-proxy>",
+        "base_url": "<https://lists.example.com>",
+        "public_signup_url": "<https://lists.example.com/subscription/form>",
+        "list_name": "<newsletter>",
+        "list_id": "<optional-public-id>",
+        "fields": "<email-only|name-and-email>",
+        "success_behavior": "<inline-message|redirect>",
+        "redirect_url": "<optional-public-url>",
+        "consent_note": true,
+        "status": "<planned|configured>"
+      }
+    },
+    "calendar_service": {
+      "mode": "<design-only|planned|configured>",
+      "provider": "<calendly|google-calendar|other|undecided>",
+      "capture_locations": ["<homepage-hero|contact|booking-section|footer>"],
+      "interaction_type": "<link-out|embed|popup>",
+      "form_factor": "<button|card|inline-section>",
+      "public_booking_url": "<optional-public-url>",
+      "embed_url": "<optional-public-url>",
+      "integration_status": "<planned|configured>"
     }
+  },
+  "i18n": {
+    "enabled": true,
+    "default_language": "<zh|en|ja|fr|...>",
+    "languages": ["<default-language>"],
+    "strategy": "content-only",
+    "translation_mode": "manual-assisted",
+    "fallback_language": "<default-language>"
   }
 }
 ```
 
 Rules:
 - Omit `optional_features.email_service` entirely when email signup is not needed.
-- Use `design-only` when the user only wants the signup experience represented in the design.
-- Use `planned` when the user wants the site planned around a future real provider such as Listmonk.
-- Reserve `configured` for future workflows that support actual service wiring.
+- Omit `optional_features.calendar_service` entirely when booking/calendar is not needed.
+- Use `design-only` when the user only wants the signup or booking experience represented in the design.
+- Use `planned` when the user wants the site planned around a future real provider but has not supplied enough public integration details yet.
+- Use `configured` when the user has supplied enough public integration details for the workflow to render a real provider-specific experience.
+- When provider is `listmonk`, also create `.site/integrations/listmonk.json` with the public integration details needed later for build, preview, status, and validation.
+- Never store provider secrets or admin-only credentials in generated project files.
+- When multilingual support is enabled, initialize the project with a single default language and reserve structure for future language additions.
+- Prefer shared page structure with language-specific content rather than duplicating site templates per language.
 
-### 3c. Create `.site/workflow-state.json`
+### 3c. Create `.site/integrations/listmonk.json`
+When `optional_features.email_service.provider` is `listmonk`, create a dedicated provider config artifact.
+
+Use a structure like:
+
+```json
+{
+  "provider": "listmonk",
+  "integration_mode": "<hosted-form|embedded-action|api-proxy>",
+  "base_url": "<https://lists.example.com>",
+  "public_signup_url": "<https://lists.example.com/subscription/form>",
+  "list_name": "<newsletter>",
+  "list_id": "<optional-public-id>",
+  "fields": {
+    "email": true,
+    "name": false
+  },
+  "copy": {
+    "headline": "<editable default>",
+    "helper_text": "<editable default>",
+    "button_label": "<editable default>",
+    "consent_note": "<editable default>",
+    "success_message": "<editable default>",
+    "error_message": "<editable default>"
+  },
+  "ux": {
+    "success_behavior": "<inline-message|redirect>",
+    "redirect_url": "<optional-public-url>"
+  },
+  "status": "<planned|configured>"
+}
+```
+
+Rules:
+- Create this file only when the provider is `listmonk`.
+- Store public signup details only.
+- Never put API keys, admin tokens, SMTP credentials, or other secrets in this file.
+- Keep copy fields editable and aligned with generated `content/` files.
+
+### 3d. Create `.site/workflow-state.json`
 This file tracks build orchestration state.
 
 Use this exact structure:
@@ -262,7 +388,7 @@ Required sections:
 - Tailwind config overrides
 - Design principles
 
-### 3e. Create `.site/site-blueprint.md`
+### 3f. Create `.site/site-blueprint.md`
 Describe:
 - page list and build order
 - key sections per page
@@ -271,7 +397,7 @@ Describe:
 - where seeded demo content is acceptable vs where real content is preferred
 - when email signup is enabled, where signup belongs in the funnel and which pages/sections should surface it
 
-### 3f. Create `.site/content-guide.md`
+### 3g. Create `.site/content-guide.md`
 This file explains how content and image states work.
 
 It must define:
@@ -293,7 +419,7 @@ Also explain:
 - that this workflow aims for a visually complete website, not a placeholder scaffold
 - that designed placeholders must still feel intentional and finished, not like blank gradient boxes
 
-### 3g. Create `.site/page-spec-{slug}.md`
+### 3h. Create `.site/page-spec-{slug}.md`
 Each page spec must include:
 - page purpose
 - section list
@@ -349,7 +475,7 @@ Use this structure:
 ```
 
 
-### 3h. Create `content/` structure
+### 3i. Create `content/` structure
 Generate page folders and shared folders with clear, editable source files.
 
 Pre-fill them with either:

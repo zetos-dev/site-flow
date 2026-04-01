@@ -38,7 +38,9 @@ The orchestrator must provide all of the following directly in the prompt:
 14. **Imagery kind per section** — `photo | illustration | abstract-brand-graphic | logo-strip | ui-mockup`
 15. **Placeholder policy per section** — whether placeholders are allowed and whether they are temporary only
 16. **Finish cues** — what makes the page feel visually complete instead of scaffold-like
-17. **Email-signup requirements only when relevant** — provider/mode/placement guidance only if this page includes an email capture surface
+17. **Email-signup requirements only when relevant** — provider-specific integration requirements if this page includes an email capture surface; when provider is `listmonk`, include integration status, integration mode, public signup target, required fields, success behavior, and signup copy file mapping
+18. **Language context when multilingual support is enabled** — target language, default language, language-specific content root, and fallback language if configured
+19. **Booking/calendar requirements only when relevant** — provider, integration status, interaction type, public booking target, embed target if any, and booking copy file mapping when this page includes a booking surface
 
 Minimum expected `Content State Map` format:
 
@@ -58,6 +60,8 @@ Image Source Plan:
 ```
 
 If this structure is missing or incomplete, stop and rely on the rest of the orchestrator prompt only where it is unambiguous. Do not invent hidden state categories.
+
+If Listmonk is selected for this page, do not silently replace it with a provider-neutral newsletter form. Use the supplied provider-specific data, or record that the provider wiring is still only planned.
 
 If required visual inputs are missing for a section marked `required`, do not downgrade that section to a generic placeholder block. Preserve the quality bar and surface the missing input in the completion report.
 
@@ -164,6 +168,7 @@ Before writing code, verify:
 - content states are mapped section by section
 - image source plan is known section by section
 - allowed visual archetypes and motion tokens are known
+- when multilingual support is enabled, the target language and content root are known
 
 During implementation:
 - build only the assigned page
@@ -172,6 +177,13 @@ During implementation:
 - extract only clearly reusable page sections/components
 - avoid unrelated refactors
 - preserve or improve design richness; do not simplify a section into a placeholder shell
+- if the page includes Listmonk signup and the integration status is `configured`, render the provider-specific action/link target, field set, and success behavior instead of a generic newsletter form
+- if the page includes Listmonk signup and the integration status is `planned`, keep the intended signup experience visible but record that provider wiring is still incomplete
+- if the page includes booking/calendar and the integration status is `configured`, preserve the provider-specific booking action or embed target instead of a generic contact CTA
+- if the page includes booking/calendar and the integration status is `planned`, keep the intended booking experience visible but record that provider wiring is still incomplete
+- when multilingual support is enabled, build only the assigned page for the target language
+- do not mix copy from different languages in the same final page unless fallback is explicitly allowed by the orchestrator
+- if target-language content is missing, record the gap clearly instead of silently inventing content
 - if a required visual section cannot be completed with real, stock, AI-generated, or deliberate designed graphics, record it as unfinished rather than masking it with a generic gradient block
 
 ## Completion Report
@@ -219,6 +231,9 @@ Create or update `.site/page-{slug}-completion-report.md` with this structure:
 - Above-the-fold quality: {passed | warning | failed}
 - Design richness: {passed | warning | failed}
 - Placeholder debt: {summary}
+- Email integration: {not-applicable | planned | configured | broken}
+- Booking integration: {not-applicable | planned | configured | broken}
+- Language status: {single-language | localized | partial | missing-content}
 
 ## Recommendations
 

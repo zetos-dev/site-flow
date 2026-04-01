@@ -210,7 +210,8 @@ If `--update` is present:
 3. Read completion reports to determine built pages.
 4. For each built page with content changes, attempt the dedicated content-update agent first; if it cannot launch, continue as `main-session-fallback` in the current project directory.
 5. Do **not** change structure, layout, component hierarchy, or visual language.
-6. After updates, run the Validation stage.
+6. If multilingual support is enabled, update only the targeted language content and do not overwrite other language directories.
+7. After updates, run the Validation stage.
 
 ### Content Update Agent Rules
 
@@ -227,6 +228,8 @@ Rules:
 - Do not change shared design tokens.
 - Keep the page visually complete after the content swap.
 - Do not regress imagery or motion richness while updating content.
+- If the page includes Listmonk signup, preserve the provider-specific wiring and success/error behavior.
+- Do not turn a Listmonk-integrated page back into a generic newsletter form.
 - If agent launch is unavailable, execute the same scoped update as main-session-fallback and record the fallback reason.
 
 Inputs you must use:
@@ -370,10 +373,12 @@ For each page:
 2. Read `.site/design-tokens.md`
 3. Read `.site/site-blueprint.md`
 4. Read `.site/content-guide.md` if present
-5. Read `.site/config.json` and check whether optional email signup is enabled and relevant to this page
-6. Check `content/{NN}-{page-name}/` for user content
-7. Read 1-2 existing pages/components for established patterns if this is not the first page
-8. Read previous completion reports if relevant
+5. Read `.site/config.json` and check whether optional email signup or calendar booking is enabled and relevant to this page
+6. If `.site/config.json` says the provider is `listmonk`, read `.site/integrations/listmonk.json`
+7. If multilingual support is enabled, determine the target language, default language, and language-specific content root
+8. Check the page-specific content folder for the active language
+9. Read 1-2 existing pages/components for established patterns if this is not the first page
+10. Read previous completion reports if relevant
 
 ### Step 4.2 — Build Structured Inputs
 
@@ -383,6 +388,10 @@ Construct a page-builder prompt that explicitly provides:
 - complete design tokens
 - complete page specification
 - relevant optional feature decisions from `.site/config.json`
+- Listmonk integration details from `.site/integrations/listmonk.json` when this page includes Listmonk signup
+- target language
+- default language
+- language-specific content root
 - content mapping
 - section-by-section content state map: `real | seeded-demo | placeholder-minimal`
 - image source plan per section
@@ -392,16 +401,23 @@ Construct a page-builder prompt that explicitly provides:
 - references to existing patterns
 - actual source material only for the target page
 - email-signup requirements only when this page is one of the configured capture locations
+- booking/calendar requirements only when this page is one of the configured capture locations
 
 Use this exact input shape inside the prompt:
 
 ```text
+Language Context:
+- target_language: en
+- default_language: zh
+- content_root: content/en
+- fallback_language: zh
+
 Content State Map:
 - Hero:
   - state: seeded-demo
   - content_files:
-    - content/01-homepage/hero-title.md
-    - content/01-homepage/hero-description.md
+    - content/en/01-homepage/hero-title.md
+    - content/en/01-homepage/hero-description.md
   - motion_tokens:
     - reveal-soft
 
@@ -416,9 +432,42 @@ Image Source Plan:
 - Contact Background:
   - preferred: stock-library
   - fallback: designed-placeholder
+
+Email Signup Requirements:
+- enabled: true
+- provider: listmonk
+- integration_status: configured
+- integration_mode: hosted-form
+- public_signup_url: https://lists.example.com/subscription/form
+- list_name: Newsletter
+- list_id: 7
+- fields: email-only
+- success_behavior: inline-message
+- redirect_url: none
+- copy_files:
+  - content/en/01-homepage/signup-headline.md
+  - content/en/01-homepage/signup-helper-text.md
+  - content/en/01-homepage/signup-button-label.md
+
+Calendar Booking Requirements:
+- enabled: true
+- provider: calendly
+- integration_status: planned
+- interaction_type: link-out
+- form_factor: button
+- public_booking_url: https://calendly.com/example/demo
+- embed_url: none
+- copy_files:
+  - content/en/01-homepage/booking-cta-label.md
+  - content/en/01-homepage/booking-helper-text.md
 ```
 
 If a section has no real image, the orchestrator must still provide a preferred image source and a fallback path.
+
+If the page uses Listmonk signup, the orchestrator must pass the provider-specific integration details instead of a generic newsletter description.
+- If Listmonk is `configured`, provide the real public action/link target and field set.
+- If Listmonk is only `planned`, still provide the intended provider, fields, and success behavior, and make the pending wiring explicit.
+- Never treat a Listmonk page as a generic provider-neutral email form when provider-specific data exists.
 
 Do not carry the whole site's `content/` corpus in the main conversation context. Only load and inject the current page's referenced content files and any directly relevant shared content.
 

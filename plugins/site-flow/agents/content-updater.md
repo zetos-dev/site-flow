@@ -23,6 +23,9 @@ The orchestrator must provide:
 7. Design tokens for reference
 8. Any validation warnings relevant to the page
 9. Email-signup requirements only when this page includes email capture
+10. Listmonk integration details when this page includes Listmonk signup
+11. Language context when multilingual support is enabled
+12. Booking/calendar requirements only when this page includes a booking surface
 
 ## Rules
 
@@ -35,6 +38,12 @@ The orchestrator must provide:
 - Do not turn a finished-looking section into a placeholder shell.
 - Only use the current page's updated content inputs and any directly relevant shared content.
 - If real content is added to a required visual section, update the image outcome accordingly.
+- If the page includes Listmonk signup, preserve the provider-specific action/link target, field set, and success/error handling.
+- Do not regress a Listmonk page into a generic provider-neutral signup form.
+- If the page includes booking/calendar, preserve the provider-specific booking action, embed target, and CTA behavior.
+- When multilingual support is enabled, update only the target language content.
+- Do not overwrite or normalize other language directories as part of the current update.
+- Do not silently replace approved localized copy with a different language.
 
 ## Completion Requirements
 

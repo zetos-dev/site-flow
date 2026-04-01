@@ -43,6 +43,7 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - seeded-demo coverage is coherent
 - placeholder-minimal use is justified and reported
 - if email signup is enabled, signup copy and placement appear only on relevant pages/sections
+- if provider is `listmonk`, `.site/integrations/listmonk.json` exists and contains public signup details only
 
 ### Visual completeness
 - required visual sections have valid image state recorded
@@ -56,11 +57,18 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - major interactive elements have sensible hover/focus feedback
 - the site demonstrates visible design richness rather than a bare scaffold
 
+### Email integration
+- if provider is `listmonk`, signup appears only on configured capture locations
+- if provider is `listmonk` and status is `configured`, built pages contain provider-specific Listmonk action/link targets and matching fields
+- if provider is `listmonk` and status is `planned`, the report must warn that provider wiring is incomplete rather than passing silently
+- generic provider-neutral signup markup on a Listmonk page counts as a failure when enough provider-specific data exists
+- mismatched fields, broken public signup targets, or missing integration artifacts count as failures
+
 ## Outcome Rules
 
-- `passed`: site feels finished and no blocked visual issues or hidden execution violations remain
-- `warning`: site is usable and fallback execution was acceptable, but non-blocking visual debt or degraded execution should still be noted
-- `failed`: required visuals are incomplete, scaffold-like output remains, fallback/reporting is inconsistent, or user-facing git/worktree prerequisites leaked into the workflow
+- `passed`: site feels finished and no blocked visual issues, broken provider wiring, or hidden execution violations remain
+- `warning`: site is usable and fallback execution was acceptable, but non-blocking visual debt, planned-only signup wiring, or degraded execution should still be noted
+- `failed`: required visuals are incomplete, scaffold-like output remains, provider-specific signup wiring is broken or missing where expected, fallback/reporting is inconsistent, or user-facing git/worktree prerequisites leaked into the workflow
 
 ## Report Requirements
 
@@ -76,5 +84,6 @@ Write `.site/validation-report.md` with:
 - visual completeness
 - image source coverage
 - motion & interaction quality
+- email integration status
 - finish readiness
 - outcome and next step

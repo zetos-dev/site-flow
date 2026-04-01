@@ -68,6 +68,11 @@ If the site is using seeded demo content, say so clearly:
 
 If `.site/validation-report.md` exists, summarize any active warnings.
 
+If the project uses Listmonk signup, explain that clearly too:
+- whether the page is already wired to a real Listmonk public signup target
+- whether the current signup experience is only planned and still missing public wiring details
+- whether any Listmonk integration warnings are active
+
 Call out clearly when the current preview still has:
 - placeholder-heavy imagery
 - weak gradient-box visuals
@@ -119,7 +124,8 @@ Provide:
 - whether the affected content is real, seeded-demo, or placeholder-minimal
 - current visual state and image source by section
 - email-signup requirements only when the affected page includes email capture
-- any validation warnings for missing imagery, weak placeholders, or lack of design richness
+- Listmonk integration details when the affected page includes Listmonk signup
+- any validation warnings for missing imagery, weak placeholders, lack of design richness, or incomplete provider wiring
 
 Rules:
 - preserve unaffected content and structure
@@ -127,6 +133,7 @@ Rules:
 - keep responsive behavior intact
 - keep within approved motion/design system unless the user explicitly wants a broader restyle
 - improve design completeness when the user calls out weak visuals, missing imagery, or placeholder-looking sections
+- preserve provider-specific signup wiring when the page includes Listmonk
 - only load the affected page's content inputs and any directly relevant shared content
 - if the helper agent cannot launch, apply only the same narrowly scoped change as `main-session-fallback` and record the fallback reason
 
