@@ -43,6 +43,8 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - seeded-demo coverage is coherent
 - placeholder-minimal use is justified and reported
 - if email signup is enabled, signup copy and placement appear only on relevant pages/sections
+- if booking/calendar is enabled, booking copy and placement appear only on relevant pages/sections
+- if multilingual support is enabled, the active language is clear and localized copy is not silently mixed with another language unless fallback is explicitly allowed
 - if provider is `listmonk`, `.site/integrations/listmonk.json` exists and contains public signup details only
 
 ### Visual completeness
@@ -64,11 +66,22 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - generic provider-neutral signup markup on a Listmonk page counts as a failure when enough provider-specific data exists
 - mismatched fields, broken public signup targets, or missing integration artifacts count as failures
 
+### Booking/calendar integration
+- if booking/calendar is enabled, booking appears only on configured capture locations
+- if booking/calendar status is `configured`, built pages contain the provider-specific public booking target or embed target where expected
+- if booking/calendar status is `planned`, the report must warn that provider wiring is incomplete rather than passing silently
+- generic contact CTAs that replace a configured booking experience count as failures
+
+### Multilingual quality
+- if multilingual support is enabled, the report should identify the default language and the checked language variant
+- missing target-language content should be reported clearly
+- silent mixed-language output counts as a warning or failure depending on scope
+
 ## Outcome Rules
 
-- `passed`: site feels finished and no blocked visual issues, broken provider wiring, or hidden execution violations remain
-- `warning`: site is usable and fallback execution was acceptable, but non-blocking visual debt, planned-only signup wiring, or degraded execution should still be noted
-- `failed`: required visuals are incomplete, scaffold-like output remains, provider-specific signup wiring is broken or missing where expected, fallback/reporting is inconsistent, or user-facing git/worktree prerequisites leaked into the workflow
+- `passed`: site feels finished and no blocked visual issues, broken provider wiring, broken booking wiring, mixed-language regressions, or hidden execution violations remain
+- `warning`: site is usable and fallback execution was acceptable, but non-blocking visual debt, planned-only signup wiring, planned-only booking wiring, or partial localization should still be noted
+- `failed`: required visuals are incomplete, scaffold-like output remains, provider-specific signup or booking wiring is broken or missing where expected, fallback/reporting is inconsistent, user-facing git/worktree prerequisites leaked into the workflow, or the active language output is materially incomplete
 
 ## Report Requirements
 
@@ -85,5 +98,7 @@ Write `.site/validation-report.md` with:
 - image source coverage
 - motion & interaction quality
 - email integration status
+- booking/calendar integration status
+- multilingual quality status
 - finish readiness
 - outcome and next step

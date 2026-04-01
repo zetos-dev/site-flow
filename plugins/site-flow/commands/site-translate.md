@@ -22,7 +22,7 @@ This command should not redesign pages or duplicate the site into separate templ
 ## Arguments
 
 - No argument: ask which new language to add
-- `<language-code>`: add that language, for example `/site-flow:site-translate en`
+- `<language-code>`: add that language, for example `/site-flow:site-translate fr`
 
 ## Pre-check
 
@@ -69,14 +69,14 @@ Use a structure like:
 
 ```json
 {
-  "default_language": "zh",
+  "default_language": "en",
   "languages": {
-    "zh": {
+    "en": {
       "status": "ready"
     },
-    "en": {
+    "fr": {
       "status": "draft",
-      "source_language": "zh",
+      "source_language": "en",
       "needs_review": true
     }
   }
