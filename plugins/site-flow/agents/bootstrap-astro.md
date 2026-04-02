@@ -42,7 +42,12 @@ The orchestrator must provide:
    - remove or rewrite starter-only pages/files
    - ensure no helper scaffold residue remains
 5. Apply design-token-aligned base setup so later page agents inherit a polished foundation.
-6. Produce `.site/bootstrap-report.md`.
+6. Establish reusable design primitives for page builders:
+   - base animation/transition utility classes from the motion token set
+   - shared section container patterns (full-bleed, contained, accent-background variants)
+   - shared button/CTA component styles with hover/focus states
+   - typography scale setup aligned to design tokens
+7. Produce `.site/bootstrap-report.md`.
 
 ## Rules
 

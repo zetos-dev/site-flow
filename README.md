@@ -46,7 +46,14 @@ Most AI website workflows break down in three ways:
 # 4. Replace content later
 /site-build --update
 
-# 5. Check workflow status anytime
+# 5. Add another language
+/site-translate fr
+
+# 6. Connect real services (optional)
+/listmonk-integrate
+/booking-integrate
+
+# 7. Check workflow status anytime
 /site-status
 ```
 
@@ -91,6 +98,18 @@ Options:
 ### `/site-preview` — Review Quickly
 
 Starts a local preview server, explains what is still demo content, highlights unfinished design debt if present, and helps the user make focused adjustments through sub-agents.
+
+### `/site-translate` — Add One Language
+
+Adds one new language version to an existing website without changing layout or design. Creates translated content files and ensures the site has a visible language selector and reachable pages for the new language.
+
+### `/listmonk-integrate` — Connect Listmonk
+
+Completes real Listmonk email integration for a site that already has designed reserved capture modules. Only runs after design/build is complete. Preserves visual quality.
+
+### `/booking-integrate` — Connect Booking
+
+Completes real booking integration (Calendly, HubSpot Meetings, Google Calendar, etc.) for a site that already has designed reserved booking entry points. Supports link-out, embed, and popup patterns.
 
 ### `/site-status` — See Real Progress
 
@@ -230,14 +249,20 @@ site-flow/
 │   ├── agents/
 │   │   ├── bootstrap-astro.md
 │   │   ├── bootstrap-html.md
+│   │   ├── booking-integrator.md
 │   │   ├── content-updater.md
+│   │   ├── init-planner.md
+│   │   ├── listmonk-integrator.md
 │   │   ├── page-builder.md
 │   │   └── site-validator.md
 │   └── commands/
 │       ├── site-init.md
 │       ├── site-build.md
 │       ├── site-preview.md
-│       └── site-status.md
+│       ├── site-translate.md
+│       ├── site-status.md
+│       ├── listmonk-integrate.md
+│       └── booking-integrate.md
 ```
 
 Generated project artifacts:
@@ -252,8 +277,25 @@ Generated project artifacts:
 ├── bootstrap-report.md
 ├── validation-report.md
 ├── page-spec-{slug}.md
-└── page-{slug}-completion-report.md
+├── page-{slug}-completion-report.md
+└── integrations/
+    ├── listmonk.json      (when email/Listmonk is enabled)
+    └── booking.json       (when booking is enabled)
 ```
+
+## Optional Features
+
+### Email / Listmonk Support
+
+During `/site-init`, users can optionally enable email support (messages, newsletter updates, or both). If Listmonk is chosen as the provider, site-flow generates an editable config template and reserves polished capture modules in the design. Real integration runs later through `/listmonk-integrate`.
+
+### Booking / Calendar Support
+
+Users can optionally enable appointment booking. site-flow reserves visible booking entry points in the design (link-out, embed, or popup variants) and generates an editable config template. Real provider hookup runs later through `/booking-integrate`.
+
+### Multilingual Support
+
+Users can optionally enable multilingual support. site-flow initializes with one default language and reserves structure for additional languages. New languages are added one at a time with `/site-translate`.
 
 ## Design Philosophy
 

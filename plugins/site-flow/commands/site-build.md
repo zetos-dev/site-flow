@@ -47,6 +47,16 @@ Do not assume git, branches, repositories, or worktrees. The normal workflow mus
 4. If `.site/workflow-state.json` exists, read it. If it does not exist, infer state from project files and continue.
 5. Use Glob to inspect existing project files (`package.json`, `src/`, `index.html`, `.site/page-*-completion-report.md`).
 
+## Git State Pre-flight
+
+Before launching any sub-agent, silently ensure the repository has at least one commit. The Claude Code harness requires a resolvable `HEAD` to start sub-agents; without it, agent launch fails with `Failed to resolve base branch "HEAD": git rev-parse failed` before any fallback logic can execute.
+
+Run `git rev-parse HEAD 2>&1` in the project directory. If it exits non-zero (no initial commit yet):
+1. `git add -A`
+2. `git commit -m "chore: initial project setup"`
+
+This is internal plumbing only. Do not surface it to the user or treat it as a user step. It must complete before the first sub-agent launch.
+
 ## Managed State
 
 Prefer `.site/workflow-state.json` as the runtime source of truth.
@@ -417,6 +427,12 @@ Construct a page-builder prompt that explicitly provides:
 - actual source material only for the target page
 - email/messages/updates design requirements only when this page is one of the configured capture locations
 - booking design requirements only when this page is one of the configured capture locations
+- design composition guidance for this page:
+  - above-the-fold visual impression target (e.g., cinematic, editorial, bold, calm, premium)
+  - section-by-section composition direction: layout pattern, visual weight, and background treatment
+  - design richness expectations: where layered composition, visual depth, or graphic elements are essential
+  - typography emphasis points: which headline is the most important, where oversized/display type is expected
+  - color usage notes: which sections use dark/accent backgrounds, where brand color emphasis applies
 
 Use this exact input shape inside the prompt:
 
@@ -475,21 +491,28 @@ Booking Requirements:
 - copy_files:
   - content/en/01-homepage/booking-cta-label.md
   - content/en/01-homepage/booking-helper-text.md
+
+Design Composition:
+- above_the_fold_impression: cinematic-premium
+- section_rhythm:
+  - Hero: full-bleed layered hero with background imagery, gradient overlay, oversized headline
+  - Features: contained grid with icon accents, light background, generous spacing
+  - Testimonials: dark accent background, card layout with subtle elevation
+  - CTA: full-bleed brand-color section with strong contrast
+- typography_emphasis:
+  - primary_headline: Hero title — display size, maximum visual weight
+  - secondary_headlines: section titles — clear hierarchy below hero
+- color_emphasis:
+  - dark_sections: [Testimonials, Footer]
+  - accent_sections: [CTA]
+  - light_sections: [Features, About]
 ```
 
 If a section has no real image, the orchestrator must still provide a preferred image source and a fallback path.
 
-If the page uses Listmonk-backed email support, the orchestrator must pass only the planned-module details needed to render a polished reserved capture surface.
-- Do not treat page build as real Listmonk integration.
-- Keep Listmonk placement intentional and limited by default.
-- Never render config values, endpoints, or raw integration metadata as user-facing content.
+If the page uses email/Listmonk support, pass only the planned-module details needed to render a polished reserved capture surface (1-2 surfaces max, no real integration hookup, no config values in visible content). If the page uses booking support, pass only the planned-module details needed to render a clearly visible reserved booking entry point matching the configured variant (link-out, embed with preserved container, or popup); keep booking entry points visually prominent and design-complete.
 
-If the page uses booking support, the orchestrator must pass only the planned-module details needed to render a clearly visible reserved booking entry point.
-- Support `link-out`, `embed`, and `popup` reserved module variants.
-- If the reserved mode is `embed`, the layout must preserve a deliberate embed container with planned height and visual framing.
-- Do not treat page build as real booking integration.
-- Planned booking entry points must remain visually prominent and design-complete.
-- Never render config values, raw booking URLs, provider labels, or lifecycle state as visible copy.
+The design composition guidance must be derived from the page spec's finish cues, design tokens, and the site blueprint's visual direction. Tailor it to the specific page being built.
 
 Do not carry the whole site's `content/` corpus in the main conversation context. Only load and inject the current page's referenced content files and any directly relevant shared content.
 

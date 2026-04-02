@@ -29,6 +29,11 @@ The orchestrator must provide:
 - Set up Tailwind via CDN or the planned minimal HTML approach
 - Create shared header/footer/navigation patterns if multiple pages are planned
 - Apply design-token-aligned base styling and shared primitives
+- Establish reusable design primitives that page builders will inherit:
+  - base animation/transition utility classes from the motion token set
+  - shared section container patterns (full-bleed, contained, accent-background)
+  - shared button/CTA component styles with hover/focus states
+  - typography scale classes aligned to design tokens
 - Clean up any starter/template residue immediately
 - Produce `.site/bootstrap-report.md`
 

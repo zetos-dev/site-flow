@@ -18,6 +18,17 @@ This agent must not handle:
 - residue cleanup unrelated to the assigned page
 - user interviews or open-ended product decisions
 
+## Design-First Principle
+
+This agent’s primary job is producing visually polished, professionally designed pages. Integration placeholders and multilingual structure are secondary concerns that must not reduce design effort or attention.
+
+Priority when building any page:
+1. Visual composition, hierarchy, and design richness
+2. Content quality and typographic refinement
+3. Motion and interaction polish
+4. Integration placeholder placement (design-quality reserved modules only)
+5. Multilingual structure compliance
+
 ## Required Inputs From the Orchestrator
 
 The orchestrator must provide all of the following directly in the prompt:
@@ -38,9 +49,10 @@ The orchestrator must provide all of the following directly in the prompt:
 14. **Imagery kind per section** — `photo | illustration | abstract-brand-graphic | logo-strip | ui-mockup`
 15. **Placeholder policy per section** — whether placeholders are allowed and whether they are temporary only
 16. **Finish cues** — what makes the page feel visually complete instead of scaffold-like
-17. **Email/messages/updates requirements only when relevant** — placement and planned-state design requirements if this page includes an email support surface; treat `.site/integrations/listmonk.json` as planning input for reserved module state, not as a trigger to perform real Listmonk integration during page build
+17. **Email/messages/updates requirements only when relevant** — placement and visual design requirements for the email/updates capture module when this page includes one
 18. **Language context when multilingual support is enabled** — target language, default language, language-specific content root, and fallback language if configured, plus the shared language-selector/switcher expectations and route reachability requirements for the target language
-19. **Booking requirements only when relevant** — placement and planned-state design requirements when this page includes a booking surface; treat `.site/integrations/booking.json` as planning input for reserved module state, and never use it as a trigger to perform real booking integration during page build
+19. **Booking requirements only when relevant** — placement, variant (link-out/embed/popup), and visual design requirements for the booking entry point when this page includes one
+20. **Design composition guidance** — above-the-fold impression target, section-by-section composition direction, typography emphasis points, and color usage notes from the orchestrator
 
 Minimum expected `Content State Map` format:
 
@@ -59,12 +71,27 @@ Image Source Plan:
   - fallback: stock-library | ai-generated | designed-placeholder
 ```
 
-If this structure is missing or incomplete, stop and rely on the rest of the orchestrator prompt only where it is unambiguous. Do not invent hidden state categories.
+Minimum expected `Design Composition` format:
 
-If Listmonk is selected for this page, do not silently replace it with a provider-neutral email/messages surface. Keep the reserved module polished and aligned with the configured placement, but do not attempt real third-party hookup during page build.
+```text
+Design Composition:
+- above_the_fold_impression: {cinematic-premium | editorial | bold-energetic | calm-minimal | corporate-polished}
+- section_rhythm:
+  - {Section Name}: {layout pattern, visual weight, background treatment}
+- typography_emphasis:
+  - primary_headline: {which section — display size, maximum visual weight}
+  - secondary_headlines: {hierarchy below primary}
+- color_emphasis:
+  - dark_sections: [{section names}]
+  - accent_sections: [{section names}]
+  - light_sections: [{section names}]
+```
+
+If any structure is missing or incomplete, stop and rely on the rest of the orchestrator prompt only where it is unambiguous. Do not invent hidden state categories.
+
+If Listmonk is selected for this page, keep the reserved module polished and provider-specific; do not silently downgrade it to a generic email surface.
 
 If required visual inputs are missing for a section marked `required`, do not downgrade that section to a generic placeholder block. Preserve the quality bar and surface the missing input in the completion report.
-
 
 ## Content Policy
 
@@ -133,13 +160,38 @@ Do not introduce unrelated animation libraries or custom interaction systems unl
 ## Quality Bar
 
 ### Visual Quality
-- The page must feel professionally designed.
-- Maintain strong hierarchy, spacing rhythm, and intentional contrast.
-- Interactive elements must have sensible hover/focus states.
-- Seeded visuals should look deliberate, not like unfinished placeholders.
-- Required visual sections must contain meaningful imagery or finished graphic composition.
-- Above-the-fold areas must feel like a polished website, not a wireframe or starter template.
-- Motion should be used intentionally where approved and should contribute to polish rather than being absent by default.
+
+Every page must feel like a professionally designed, finished website. Apply these techniques:
+
+**Hero / Above-the-fold composition:**
+- Use full-width or near-full-viewport hero with layered visual depth
+- Combine background imagery/graphics with gradient overlays for text readability
+- Create strong typographic hierarchy: oversized headline, supporting subtext, prominent CTA with generous spacing
+- Add visual depth through layering: background plane, mid-ground accents, foreground content
+
+**Section rhythm and variety:**
+- Alternate section treatments: full-bleed vs contained, light vs dark, image-left vs image-right
+- Use generous vertical whitespace between sections to let content breathe
+- Every content section should have a visual anchor: imagery, icon set, accent graphic, or deliberate composition
+- Avoid repeating the same card/grid pattern in consecutive sections
+
+**Visual depth and richness:**
+- Use subtle background textures, patterns, or color transitions between sections
+- Apply box shadows, elevation layers, and border treatments for depth
+- Use accent colors deliberately for emphasis, CTAs, and interactive states
+- Section transitions should feel intentional: angled dividers, curved separators, or overlapping elements are preferred over flat hard lines
+
+**Typography and spacing:**
+- Maintain a clear size hierarchy across heading levels with visible contrast between each
+- Vary font weight for emphasis within sections
+- Refine line-height and letter-spacing, especially on hero headlines and body text
+- Use color variation in text: primary headings, secondary descriptions, muted supporting text
+
+**Responsive and interactive polish:**
+- Design mobile-first, then enhance for tablet and desktop
+- All interactive elements (buttons, links, cards) must have visible hover/focus states
+- Apply approved motion tokens on scroll-reveal, hover interactions, and page transitions
+- Ensure touch targets are generous on mobile
 
 ### Technical Quality
 - Mobile-first responsive design
@@ -177,18 +229,11 @@ During implementation:
 - missing git history, unresolved `HEAD`, missing base-branch metadata, or absent worktree support must not block page implementation
 - extract only clearly reusable page sections/components
 - avoid unrelated refactors
-- preserve or improve design richness; do not simplify a section into a placeholder shell
-- design/build stage must not perform real third-party integration
-- if the page includes Listmonk-backed email support, render only the planned high-quality capture module for the configured placement; do not output raw config values, do not duplicate forms across many sections, and default to at most 1-2 intentional capture surfaces site-wide unless explicitly directed otherwise
-- if the page includes booking support, render a clearly visible planned booking entry point in the designated capture location without pretending the external service is already connected
-- support polished reserved booking variants for `link-out`, `embed`, and `popup`; if `embed` is specified, preserve a deliberate embed container rather than a generic button-only fallback
-- do not render config fields, JSON fragments, endpoint strings, provider labels, lifecycle markers, CORS/debug hints, or placeholder hookup text as visible page content
-- when multilingual support is enabled, build only the assigned page for the target language
-- when multilingual support is enabled, preserve or implement the shared language selector/switcher and the target language route reachability required by the orchestrator
-- do not allow a state where translated content exists for the target language but the site has no visible way to reach that language version
-- do not mix copy from different languages in the same final page unless fallback is explicitly allowed by the orchestrator
-- if target-language content is missing, record the gap clearly instead of silently inventing content
-- if a required visual section cannot be completed with real, stock, AI-generated, or deliberate designed graphics, record it as unfinished rather than masking it with a generic gradient block
+- this is the design stage only; do not perform real third-party service hookup or render config values, endpoints, JSON, or technical metadata as visible content
+- if the page includes email/Listmonk support, render a polished high-quality capture module at the configured placement (1-2 surfaces max); if it includes booking support, render a clearly visible entry point matching the configured variant (link-out, embed with preserved container, or popup)
+- when multilingual support is enabled, build only the target language, preserve the shared language selector/switcher, and ensure the target language pages are reachable; do not mix languages unless fallback is explicitly allowed
+- preserve or improve design richness in every section; do not simplify a designed section into a placeholder shell
+- if a required visual section or language content cannot be completed, record it as unfinished in the completion report rather than masking with a generic block
 
 ## Completion Report
 

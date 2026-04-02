@@ -166,6 +166,16 @@ Rules:
 
 After confirmation, generate the planning artifacts.
 
+### Git State Pre-flight
+
+Before launching any sub-agent, silently ensure the repository has at least one commit. The Claude Code harness requires a resolvable `HEAD` to start sub-agents; without it, agent launch fails with `Failed to resolve base branch "HEAD": git rev-parse failed` before any fallback logic can execute.
+
+Run `git rev-parse HEAD 2>&1` in the project directory. If it exits non-zero (no initial commit yet):
+1. `git add -A`
+2. `git commit -m "chore: initial project setup"`
+
+This is internal plumbing only. Do not surface it to the user or treat it as a user step.
+
 Use a focused sub-agent for this planning/content generation stage so the main conversation stays lean. You must attempt `plugins/site-flow/agents/init-planner.md` first using a standard sub-agent launch in the current project context, without worktree isolation. Only continue in the current session if that helper launch actually fails.
 
 Execution policy:
@@ -430,11 +440,13 @@ In addition to colors, typography, spacing, and visual principles, include:
 
 Required sections:
 - Color system
-- Typography
-- Spacing & layout
-- Border radius / shadows
+- Typography scale and hierarchy
+- Spacing & layout patterns
+- Border radius / shadows / elevation
 - Motion tokens
 - Visual archetypes
+- Section composition patterns — describe 3-4 reusable section layouts (full-bleed hero, contained feature grid, dark accent testimonial, split image+text) with their intended visual weight and rhythm
+- Component design patterns — button variants, card styles, CTA treatments, form styling
 - Tailwind config overrides
 - Design principles
 
