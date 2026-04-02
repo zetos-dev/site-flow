@@ -384,9 +384,9 @@ For each page:
 2. Read `.site/design-tokens.md`
 3. Read `.site/site-blueprint.md`
 4. Read `.site/content-guide.md` if present
-5. Read `.site/config.json` and check whether optional email support or calendar booking is enabled and relevant to this page
-6. If `.site/config.json` says the provider is `listmonk`, read `.site/integrations/listmonk.json`
-7. If booking/calendar support is enabled, read `.site/integrations/calendar.json` when present
+5. Read `.site/config.json` and check whether optional email support or booking support is enabled and relevant to this page
+6. If `.site/config.json` says the provider is `listmonk`, read `.site/integrations/listmonk.json` as planned integration metadata for reserved module placement
+7. If booking support is enabled, read `.site/integrations/booking.json` as planned integration metadata for reserved module placement
 8. If multilingual support is enabled, determine the target language, default language, and language-specific content root
 9. Check the page-specific content folder for the active language
 10. Read 1-2 existing pages/components for established patterns if this is not the first page
@@ -400,8 +400,8 @@ Construct a page-builder prompt that explicitly provides:
 - complete design tokens
 - complete page specification
 - relevant optional feature decisions from `.site/config.json`
-- Listmonk integration details from `.site/integrations/listmonk.json` when this page includes Listmonk-backed email support
-- calendar integration details from `.site/integrations/calendar.json` when this page includes booking/calendar support
+- Listmonk planned-module details from `.site/integrations/listmonk.json` when this page includes a Listmonk reservation surface
+- booking planned-module details from `.site/integrations/booking.json` when this page includes booking reservation support
 - target language
 - default language
 - language-specific content root
@@ -415,8 +415,8 @@ Construct a page-builder prompt that explicitly provides:
 - motion token set allowed for the page
 - references to existing patterns
 - actual source material only for the target page
-- email/messages/updates requirements only when this page is one of the configured capture locations
-- booking/calendar requirements only when this page is one of the configured capture locations
+- email/messages/updates design requirements only when this page is one of the configured capture locations
+- booking design requirements only when this page is one of the configured capture locations
 
 Use this exact input shape inside the prompt:
 
@@ -451,7 +451,7 @@ Image Source Plan:
 Email / Updates Requirements:
 - enabled: true
 - provider: listmonk
-- integration_status: configured
+- integration_status: ready-for-integration
 - base_url: https://lists.example.com
 - public_subscription_endpoint: /api/public/subscription
 - public_subscription_endpoint: /api/public/subscription
@@ -464,7 +464,7 @@ Email / Updates Requirements:
   - content/en/01-homepage/updates-helper-text.md
   - content/en/01-homepage/updates-button-label.md
 
-Calendar Booking Requirements:
+Booking Requirements:
 - enabled: true
 - provider: calendly
 - integration_status: planned
@@ -479,10 +479,17 @@ Calendar Booking Requirements:
 
 If a section has no real image, the orchestrator must still provide a preferred image source and a fallback path.
 
-If the page uses Listmonk-backed email support, the orchestrator must pass the provider-specific integration details from config instead of a generic newsletter description.
-- If Listmonk is `configured`, provide the real public endpoint or action/link target from config.
-- If Listmonk is only `planned`, still provide the intended provider and make the pending wiring explicit.
-- Never treat a Listmonk page as a generic provider-neutral email form when provider-specific data exists.
+If the page uses Listmonk-backed email support, the orchestrator must pass only the planned-module details needed to render a polished reserved capture surface.
+- Do not treat page build as real Listmonk integration.
+- Keep Listmonk placement intentional and limited by default.
+- Never render config values, endpoints, or raw integration metadata as user-facing content.
+
+If the page uses booking support, the orchestrator must pass only the planned-module details needed to render a clearly visible reserved booking entry point.
+- Support `link-out`, `embed`, and `popup` reserved module variants.
+- If the reserved mode is `embed`, the layout must preserve a deliberate embed container with planned height and visual framing.
+- Do not treat page build as real booking integration.
+- Planned booking entry points must remain visually prominent and design-complete.
+- Never render config values, raw booking URLs, provider labels, or lifecycle state as visible copy.
 
 Do not carry the whole site's `content/` corpus in the main conversation context. Only load and inject the current page's referenced content files and any directly relevant shared content.
 
@@ -576,8 +583,8 @@ If the validation agent cannot launch, continue via `main-session-fallback` and 
 - verify required visual sections are complete
 - fail pages that still rely on gradient placeholder boxes, empty frames, or wireframe-like design in required visual areas
 - verify motion/interaction polish where the page spec expects it
-- verify Listmonk wiring state as `planned`, `configured`, `inconsistent`, or `broken`
-- verify booking/calendar state as `design-only`, `planned`, `configured`, `inconsistent`, or `broken`
+- verify Listmonk planned-module state as `design-only`, `planned`, `ready-for-integration`, `integrated`, `inconsistent`, or `broken`
+- verify booking planned-module state as `design-only`, `planned`, `ready-for-integration`, `integrated`, `inconsistent`, or `broken`
 - verify selected booking capture locations are visibly implemented in the generated pages
 - if multilingual support is enabled, verify the shared language selector/switcher exists and enabled languages have actual page reachability
 - report next actions clearly
@@ -587,8 +594,8 @@ Validation must explicitly distinguish between:
 - unacceptable unfinished visuals: blank placeholders, generic gradient slabs, empty mock frames
 
 Validation must also explicitly distinguish between:
-- Listmonk wiring states: planned, configured, inconsistent, broken
-- booking/calendar states: design-only, planned, configured, inconsistent, broken
+- Listmonk module states: design-only, planned, ready-for-integration, integrated, inconsistent, broken
+- booking module states: design-only, planned, ready-for-integration, integrated, inconsistent, broken
 - multilingual states: single-language, multilingual-ready, multilingual-active, multilingual-broken
 
 If multilingual support is enabled, validation must confirm:
@@ -613,12 +620,12 @@ Maintain these artifacts where applicable:
   - pages built or updated
   - whether residue scan passed
   - whether the site is ready for preview
-  - whether Listmonk wiring is planned, configured, inconsistent, or broken when relevant
-  - whether booking/calendar wiring is planned, configured, inconsistent, or broken when relevant
+  - whether Listmonk is still in planned/ready-for-integration state or has already been handled by a dedicated integration workflow
+  - whether booking is still in planned/ready-for-integration state or has already been handled by a dedicated integration workflow
   - whether multilingual support is active, incomplete, or ready for another language
 
-If Listmonk is selected, remind the user they can edit `.site/integrations/listmonk.json`, then rerun `/site-flow:site-build --update` and `/site-flow:site-preview` to apply and test the integration.
+If Listmonk is selected, remind the user that site build only prepares the reserved module and config. Real hookup should run through a dedicated Listmonk integration workflow.
 
-If booking/calendar is selected, remind the user they can edit `.site/integrations/calendar.json`, then rerun `/site-flow:site-build --update` and `/site-flow:site-preview` to apply and test the booking path.
+If booking is selected, remind the user that site build only prepares the reserved module and config. Real hookup should run through a dedicated booking integration workflow.
 
 If multilingual support is enabled, remind the user they can add one more language later with `/site-flow:site-translate <language-code>`.

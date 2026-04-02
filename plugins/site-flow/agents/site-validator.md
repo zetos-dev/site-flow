@@ -45,10 +45,10 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - seeded-demo coverage is coherent
 - placeholder-minimal use is justified and reported
 - if email support is enabled, message/update copy and placement appear only on relevant pages/sections
-- if booking/calendar is enabled, booking copy and placement appear only on relevant pages/sections
+- if booking support is enabled, booking copy and placement appear only on relevant pages/sections
 - if multilingual support is enabled, the active language is clear and localized copy is not silently mixed with another language unless fallback is explicitly allowed
 - if provider is `listmonk`, `.site/integrations/listmonk.json` exists and contains public integration details only
-- if booking/calendar support is enabled, `.site/integrations/calendar.json` exists and contains public integration details only
+- if booking support is enabled, `.site/integrations/booking.json` exists and contains public integration details only
 
 ### Visual completeness
 - required visual sections have valid image state recorded
@@ -64,18 +64,22 @@ Verify that the generated site is built, coherent, visually complete, and consis
 
 ### Email integration
 - if provider is `listmonk`, email support appears only on configured capture locations
-- if provider is `listmonk` and status is `configured`, built pages contain provider-specific Listmonk public endpoint or action/link targets and matching copy
-- if provider is `listmonk` and status is `planned`, the report must warn that provider wiring is incomplete rather than passing silently
-- if provider is `listmonk` and `.site/config.json` disagrees with `.site/integrations/listmonk.json`, the report must mark the wiring state as `inconsistent`
-- generic provider-neutral email/message markup on a Listmonk-backed page counts as a failure when enough provider-specific config data exists
-- mismatched public targets or missing integration artifacts count as failures
+- if provider is `listmonk`, the design-stage site should show only polished planned capture modules rather than real service hookup unless a dedicated integration agent has already run
+- listmonk capture surfaces should be limited to 1-2 intentional placements by default unless the user explicitly requested more
+- repeated low-intent forms scattered across many sections count as a failure of design quality
+- content files must not carry machine-readable listmonk integration state
+- visible UI must not expose endpoint strings, list UUIDs, raw config values, CORS/debug notes, or integration metadata
+- mismatched placement, missing integration artifacts, or config-like values rendered visibly on the page count as failures
 
-### Booking/calendar integration
-- if booking/calendar is enabled, booking appears only on configured capture locations
-- if booking/calendar status is `configured`, built pages contain the provider-specific public booking target or embed target where expected
-- if booking/calendar status is `planned`, the report must warn that provider wiring is incomplete rather than passing silently
-- if booking/calendar config and rendered placement disagree, the report must mark the booking state as `inconsistent`
-- generic contact CTAs that replace a configured booking experience count as failures
+### Booking integration
+- if booking support is enabled, booking appears only on configured capture locations
+- if booking is in planned state, the design-stage site must still contain a clear visible booking entry point in at least one high-visibility configured location
+- planned booking entry points must feel like intentional premium CTAs or scheduling panels, not hidden text links or low-quality placeholders
+- support planned booking variants for `link-out`, `embed`, and `popup`; when `embed` is selected, the rendered page must preserve a deliberate embed container rather than collapsing to a generic CTA
+- content files must not carry machine-readable booking integration state
+- if booking config and rendered placement disagree, the report must mark the booking state as `inconsistent`
+- generic contact CTAs that replace or hide a planned booking experience count as failures
+- visible UI must not expose booking config, provider debug text, raw integration metadata, or technical setup notes
 
 ### Multilingual quality
 - if multilingual support is enabled, the report should identify the default language and the checked language variant
@@ -86,9 +90,9 @@ Verify that the generated site is built, coherent, visually complete, and consis
 
 ## Outcome Rules
 
-- `passed`: site feels finished and no blocked visual issues, broken provider wiring, broken booking wiring, mixed-language regressions, or hidden execution violations remain
-- `warning`: site is usable and fallback execution was acceptable, but non-blocking visual debt, planned-only email wiring, planned-only booking wiring, or partial localization should still be noted
-- `failed`: required visuals are incomplete, scaffold-like output remains, provider-specific email or booking wiring is broken or missing where expected, fallback/reporting is inconsistent, user-facing git/worktree prerequisites leaked into the workflow, or the active language output is materially incomplete
+- `passed`: site feels finished and no blocked visual issues, hidden booking entry points, over-repeated email forms, mixed-language regressions, or hidden execution violations remain
+- `warning`: site is usable and fallback execution was acceptable, but non-blocking visual debt, planned-only integration modules awaiting a dedicated integration agent, or partial localization should still be noted
+- `failed`: required visuals are incomplete, scaffold-like output remains, integration modules are noisy or hidden, config-like data leaks into content or visible UI, fallback/reporting is inconsistent, user-facing git/worktree prerequisites leaked into the workflow, or the active language output is materially incomplete
 
 ## Report Requirements
 
@@ -105,7 +109,7 @@ Write `.site/validation-report.md` with:
 - image source coverage
 - motion & interaction quality
 - email integration status
-- booking/calendar integration status
+- booking integration status
 - multilingual quality status
 - finish readiness
 - outcome and next step

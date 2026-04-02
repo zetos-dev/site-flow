@@ -38,9 +38,9 @@ The orchestrator must provide all of the following directly in the prompt:
 14. **Imagery kind per section** — `photo | illustration | abstract-brand-graphic | logo-strip | ui-mockup`
 15. **Placeholder policy per section** — whether placeholders are allowed and whether they are temporary only
 16. **Finish cues** — what makes the page feel visually complete instead of scaffold-like
-17. **Email/messages/updates requirements only when relevant** — provider-specific integration requirements if this page includes an email support surface; when provider is `listmonk`, use the generated integration config file as the source of truth for public endpoint, list, opt-in, and copy file mapping
+17. **Email/messages/updates requirements only when relevant** — placement and planned-state design requirements if this page includes an email support surface; treat `.site/integrations/listmonk.json` as planning input for reserved module state, not as a trigger to perform real Listmonk integration during page build
 18. **Language context when multilingual support is enabled** — target language, default language, language-specific content root, and fallback language if configured, plus the shared language-selector/switcher expectations and route reachability requirements for the target language
-19. **Booking/calendar requirements only when relevant** — provider, integration status, interaction type, public booking target, embed target if any, and booking copy file mapping when this page includes a booking surface; use the generated calendar config file as the source of truth
+19. **Booking requirements only when relevant** — placement and planned-state design requirements when this page includes a booking surface; treat `.site/integrations/booking.json` as planning input for reserved module state, and never use it as a trigger to perform real booking integration during page build
 
 Minimum expected `Content State Map` format:
 
@@ -61,7 +61,7 @@ Image Source Plan:
 
 If this structure is missing or incomplete, stop and rely on the rest of the orchestrator prompt only where it is unambiguous. Do not invent hidden state categories.
 
-If Listmonk is selected for this page, do not silently replace it with a provider-neutral email/messages surface. Use the supplied provider-specific config data, or record that the provider wiring is still only planned.
+If Listmonk is selected for this page, do not silently replace it with a provider-neutral email/messages surface. Keep the reserved module polished and aligned with the configured placement, but do not attempt real third-party hookup during page build.
 
 If required visual inputs are missing for a section marked `required`, do not downgrade that section to a generic placeholder block. Preserve the quality bar and surface the missing input in the completion report.
 
@@ -178,10 +178,11 @@ During implementation:
 - extract only clearly reusable page sections/components
 - avoid unrelated refactors
 - preserve or improve design richness; do not simplify a section into a placeholder shell
-- if the page includes Listmonk-backed email support and the integration status is `configured`, render the provider-specific action/link target and success behavior instead of a generic email form
-- if the page includes Listmonk-backed email support and the integration status is `planned`, keep the intended email/messages or updates experience visible but record that provider wiring is still incomplete
-- if the page includes booking/calendar and the integration status is `configured`, preserve the provider-specific booking action or embed target instead of a generic contact CTA
-- if the page includes booking/calendar and the integration status is `planned`, implement the intended booking entry point in the designated capture location and record that provider wiring is still incomplete
+- design/build stage must not perform real third-party integration
+- if the page includes Listmonk-backed email support, render only the planned high-quality capture module for the configured placement; do not output raw config values, do not duplicate forms across many sections, and default to at most 1-2 intentional capture surfaces site-wide unless explicitly directed otherwise
+- if the page includes booking support, render a clearly visible planned booking entry point in the designated capture location without pretending the external service is already connected
+- support polished reserved booking variants for `link-out`, `embed`, and `popup`; if `embed` is specified, preserve a deliberate embed container rather than a generic button-only fallback
+- do not render config fields, JSON fragments, endpoint strings, provider labels, lifecycle markers, CORS/debug hints, or placeholder hookup text as visible page content
 - when multilingual support is enabled, build only the assigned page for the target language
 - when multilingual support is enabled, preserve or implement the shared language selector/switcher and the target language route reachability required by the orchestrator
 - do not allow a state where translated content exists for the target language but the site has no visible way to reach that language version
@@ -234,8 +235,8 @@ Create or update `.site/page-{slug}-completion-report.md` with this structure:
 - Above-the-fold quality: {passed | warning | failed}
 - Design richness: {passed | warning | failed}
 - Placeholder debt: {summary}
-- Email integration: {not-applicable | planned | configured | broken}
-- Booking integration: {not-applicable | planned | configured | broken}
+- Email integration: {not-applicable | planned | ready-for-integration | broken}
+- Booking integration: {not-applicable | planned | ready-for-integration | broken}
 - Language status: {single-language | localized | partial | missing-content}
 
 ## Recommendations

@@ -40,7 +40,7 @@ This command should not redesign pages or duplicate the site into separate templ
 - Do not duplicate page source files just to create a new language.
 - Prefer `content/{lang}/{page}/...` structure.
 - Translate content only where source text is required, but complete the site-facing language support as well.
-- Preserve email and booking/calendar integration intent across languages.
+- Preserve email and booking integration intent across languages.
 - If multilingual support is enabled, the site must expose a visible language selection path in shared UI and actual reachability for the new language pages.
 - If content cannot be translated confidently, mark it for review rather than inventing factual claims.
 - Keep the project understandable for non-technical users.

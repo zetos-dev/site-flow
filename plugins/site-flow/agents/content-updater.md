@@ -23,10 +23,10 @@ The orchestrator must provide:
 7. Design tokens for reference
 8. Any validation warnings relevant to the page
 9. Email/messages/updates requirements only when this page includes an email support surface
-10. Listmonk integration details from the generated config file when this page includes Listmonk-backed email support
+10. Listmonk integration planning details from the generated config file when this page includes a planned Listmonk-backed email surface
 11. Language context when multilingual support is enabled
-12. Booking/calendar requirements only when this page includes a booking surface
-13. Calendar integration details from the generated config file when this page includes booking/calendar support
+12. Booking requirements only when this page includes a booking surface
+13. Booking integration planning details from the generated config file when this page includes planned booking support; use `.site/integrations/booking.json`
 
 ## Rules
 
@@ -41,9 +41,11 @@ The orchestrator must provide:
 - Do not turn a finished-looking section into a placeholder shell.
 - Only use the current page's updated content inputs and any directly relevant shared content.
 - If real content is added to a required visual section, update the image outcome accordingly.
-- If the page includes Listmonk-backed email support, preserve the provider-specific action/link target, field set, and success/error handling sourced from config.
-- Do not regress a Listmonk-backed email/messages surface into a generic provider-neutral form.
-- If the page includes booking/calendar, preserve the provider-specific booking action, embed target, and CTA behavior.
+- Design/update stage must not perform real third-party integration.
+- If the page includes Listmonk-backed email support, preserve the planned reserved module placement and visual quality without exposing config fields or duplicating forms across many sections.
+- Do not regress a planned Listmonk surface into a generic low-quality utility form.
+- If the page includes booking, preserve a clearly visible planned booking entry point with the intended CTA behavior and placement.
+- Do not expose config fields, raw URLs, JSON fragments, or lifecycle state as visible copy.
 - When multilingual support is enabled, update only the target language content.
 - When multilingual support is enabled, preserve the shared language selector/switcher and actual reachability of enabled language pages.
 - Do not allow a state where translated content exists but the site has no visible way to reach that language version.

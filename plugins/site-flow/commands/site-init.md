@@ -60,7 +60,7 @@ Ask in one batch:
 Discovery batching rule:
 - Batch 1: base website questions only
 - Batch 2: optional email/Listmonk questions only if email support is needed
-- Batch 3: optional booking/calendar questions only if booking support is needed
+- Batch 3: optional booking questions only if booking support is needed
 - Batch 4: optional multilingual questions only if multilingual support is needed
 - Do not combine multiple optional feature areas into one AskUserQuestion batch.
 
@@ -111,7 +111,7 @@ Rules:
 - Generate editable config files instead, so the user can fill real integration details in later.
 - Use `design-only` when the user only wants the experience represented in the design.
 - Use `planned` when the feature is enabled but the integration config still needs real values.
-- Use `configured` only when the generated integration config file later contains enough public details for real provider wiring.
+- Use `ready-for-integration` only when the generated integration config file later contains enough public details for real provider wiring.
 - Tell the user they can edit the generated config file after site generation and rerun build/update.
 
 Keep this optional.
@@ -120,7 +120,7 @@ Keep this optional.
 
 ### 2e. Ask About Optional Booking / Calendar
 Run this as a separate AskUserQuestion batch only after the optional email batch is complete.
-Do not combine booking/calendar follow-ups with email or multilingual follow-ups.
+Do not combine booking follow-ups with email or multilingual follow-ups.
 
 Ask one simple non-technical question before generating planning artifacts:
 - Does this website need appointment booking or calendar scheduling?
@@ -132,12 +132,12 @@ If yes, ask follow-ups in plain language:
 
 Rules:
 - Do not ask for booking URLs, embed URLs, or provider connection details in chat during initialization.
-- Generate an editable calendar config file instead, so the user can fill real integration details in later.
+- Generate an editable booking config file instead, so the user can fill real integration details in later.
 - Use `design-only` when the user only wants the booking experience represented visually.
 - Use `planned` when the feature is enabled but the integration config still needs real values.
-- Use `configured` only when the generated integration config file later contains enough public details for real provider wiring.
+- Use `ready-for-integration` only when the generated integration config file later contains enough public details for real provider wiring.
 - Tell the user they can edit the generated config file after site generation and rerun build/update.
-- Booking/calendar selection must reserve visible booking UI in the chosen capture locations, not just a config artifact.
+- Booking selection must reserve visible booking UI in the chosen capture locations, not just a config artifact.
 
 Keep this optional.
 - If the user does not need booking, do not force empty integration placeholders into the project config.
@@ -208,18 +208,18 @@ Required fields:
   "image_profile": "<industry-appropriate style profile>",
   "optional_features": {
     "email_service": {
-      "mode": "<design-only|planned|configured>",
+      "mode": "<design-only|planned>",
       "provider": "<listmonk|other|undecided>",
       "capture_locations": ["<homepage-hero|footer|contact|updates-block>"],
       "surface_type": "<messages|updates|both>",
-      "integration_status": "<planned|configured>"
+      "integration_status": "<planned|ready-for-integration>"
     },
-    "calendar_service": {
-      "mode": "<design-only|planned|configured>",
+    "booking_service": {
+      "mode": "<design-only|planned>",
       "provider": "<calendly|google-calendar|other|undecided>",
       "capture_locations": ["<homepage-hero|contact|booking-section|footer>"],
       "interaction_type": "<link-out|embed|popup>",
-      "integration_status": "<planned|configured>"
+      "integration_status": "<planned|ready-for-integration>"
     }
   },
   "i18n": {
@@ -235,14 +235,16 @@ Required fields:
 
 Rules:
 - Omit `optional_features.email_service` entirely when email support is not needed.
-- Omit `optional_features.calendar_service` entirely when booking/calendar is not needed.
+- Omit `optional_features.booking_service` entirely when booking support is not needed.
 - Use `design-only` when the user only wants the email or booking experience represented in the design.
-- Use `planned` when the feature is enabled but its generated integration config file still needs real public values.
-- Use `configured` when the generated integration config file contains enough public details for real provider wiring.
-- When provider is `listmonk`, create `.site/integrations/listmonk.json` as an editable config template for build, preview, status, validation, and later updates.
-- When booking/calendar support is enabled, create `.site/integrations/calendar.json` as an editable config template for build, preview, status, validation, and later updates.
+- Use `planned` when the feature is enabled and the generated config file is being prepared for a later dedicated integration agent.
+- Use `ready-for-integration` when the generated integration config file contains enough public details for a later dedicated integration agent to perform real hookup.
+- Do not use `integrated` during site initialization; real integration must be completed later by a dedicated integration skill or agent.
+- `ready-for-integration` means the public values and integration mode are complete enough for a dedicated integration agent to attempt real hookup, but it does not guarantee browser/runtime conditions such as CORS already succeed.
+- When provider is `listmonk`, create `.site/integrations/listmonk.json` as an editable config template for later integration work, validation, and updates.
+- When booking support is enabled, create `.site/integrations/booking.json` as the preferred editable config template for later integration work, validation, and updates.
 - Never store provider secrets or admin-only credentials in generated project files.
-- Tell the user they can edit the generated integration config files later and rerun `/site-flow:site-build` or `/site-flow:site-build --update`.
+- Tell the user they can edit the generated integration config files later and then run a dedicated integration workflow, not just design/build.
 - When multilingual support is enabled, initialize the project with a single default language and reserve structure for future language additions.
 - Prefer shared page structure with language-specific content rather than duplicating site templates per language.
 - When multilingual support is enabled, the generated site must include a visible language selector/switcher plan and language-specific page reachability.
@@ -255,21 +257,29 @@ Use a structure like:
 ```json
 {
   "provider": "listmonk",
-  "base_url": "<https://lists.example.com>",
+  "integration_status": "<planned|ready-for-integration>",
+  "integration_mode": "<direct-public-api|public-form-post|bridge-endpoint>",
+  "capture_locations": ["contact"],
+  "surface_type": "<messages|updates|both>",
+  "public_base_url": "<https://lists.example.com>",
   "public_subscription_endpoint": "</api/public/subscription>",
   "public_signup_url": "<optional-public-url>",
   "list_name": "<newsletter-or-updates>",
   "list_id": "<optional-public-id>",
   "list_uuid": "<optional-public-uuid>",
+  "field_mapping": {
+    "email": "email",
+    "name": "name"
+  },
   "opt_in": "<single|double|unknown>",
-  "copy": {
+  "cors_expectation": "<required|not-required|unknown>",
+  "copy_defaults": {
     "headline": "<editable default>",
     "helper_text": "<editable default>",
     "button_label": "<editable default>",
     "success_message": "<editable default>",
     "error_message": "<editable default>"
-  },
-  "status": "<planned|configured>"
+  }
 }
 ```
 
@@ -278,35 +288,45 @@ Rules:
 - Create it as an editable template even if the user did not supply real values during initialization.
 - Store public integration details only.
 - Never put API keys, admin tokens, SMTP credentials, or other secrets in this file.
-- Keep copy fields editable and aligned with generated `content/` files.
-- Tell the user they can update this file later and rerun build/update.
+- Treat this file as input for a later dedicated Listmonk integration agent.
+- Record the real planned submission mode, such as direct browser POST to a public API, public form POST, or bridge endpoint.
+- Keep copy defaults editable and aligned with generated `content/` files.
+- Default to at most 1-2 intentional capture locations unless the user explicitly requests more.
+- Do not claim real integration is complete during initialization.
 
-### 3d. Create `.site/integrations/calendar.json`
-When `optional_features.calendar_service` is enabled, create a dedicated editable calendar config artifact.
+### 3d. Create `.site/integrations/booking.json`
+When `optional_features.booking_service` is enabled, create a dedicated editable booking config artifact.
 
 Use a structure like:
 
 ```json
 {
-  "provider": "<calendly|google-calendar|other|undecided>",
+  "provider": "<hubspot-meetings|calendly|google-calendar|other|undecided>",
+  "integration_status": "<planned|ready-for-integration>",
+  "capture_locations": ["homepage-hero"],
+  "interaction_type": "<link-out|embed|popup>",
   "public_booking_url": "<optional-public-url>",
   "embed_url": "<optional-public-url>",
-  "interaction_type": "<link-out|embed|popup>",
-  "copy": {
+  "booking_title": "<optional-embed-title>",
+  "embed_height": "<optional-px-or-token>",
+  "copy_defaults": {
     "headline": "<editable default>",
     "helper_text": "<editable default>",
     "button_label": "<editable default>"
-  },
-  "status": "<planned|configured>"
+  }
 }
 ```
 
 Rules:
-- Create this file only when booking/calendar support is enabled.
+- Create this file only when booking support is enabled.
 - Create it as an editable template even if the user did not supply real values during initialization.
 - Store public integration details only.
 - Never put secrets or admin-only credentials in this file.
-- Tell the user they can update this file later and rerun build/update.
+- Treat this file as input for a later dedicated booking integration agent.
+- Support providers such as `hubspot-meetings`, `calendly`, `google-calendar`, and `other`.
+- Support reserved module variants for `link-out`, `embed`, and `popup`; if `embed` is selected, the planned design must reserve the embed container layout, height, and visual treatment up front.
+- Ensure the selected capture locations include at least one clearly visible booking entry point.
+- Do not claim real integration is complete during initialization.
 
 ### 3e. Create `.site/workflow-state.json`
 This file tracks build orchestration state.
@@ -426,7 +446,8 @@ Describe:
 - overall conversion path
 - where seeded demo content is acceptable vs where real content is preferred
 - when email support is enabled, where email/messages or updates surfaces belong in the funnel and which pages/sections should surface them
-- when booking/calendar is enabled, where booking entry points or sections must visibly appear
+- limit Listmonk capture placement to deliberate high-intent locations by default, typically no more than 1-2 surfaces
+- when booking is enabled, where clearly visible booking entry points or sections must appear in the planned design state
 - when multilingual support is enabled, where the shared language selector/switcher should appear and how language-specific page reachability should work
 
 ### 3g. Create `.site/content-guide.md`
@@ -467,7 +488,7 @@ Each page spec must include:
 - accessibility / responsiveness notes
 - finish cues for how the page should feel visually complete
 - when email support is enabled, section-level email/messages or updates requirements only on relevant pages
-- when booking/calendar is enabled, section-level booking requirements only on relevant pages
+- when booking support is enabled, section-level booking requirements only on relevant pages, including whether the reserved module is `link-out`, `embed`, or `popup`
 - when multilingual support is enabled, shared-UI language selector requirements and language-specific route expectations
 
 Use this structure:
