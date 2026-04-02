@@ -27,12 +27,13 @@ Use staged handoffs:
 
 Execution policy:
 - The main session may perform environment readiness, dependency installation/setup, state/report reads and writes, stage selection, and agent dispatch.
-- The main session should attempt dedicated agent execution first for bootstrap, page work, content refreshes, preview-driven design edits, and validation.
-- Site-flow helper agents should use standard sub-agent execution in the current project context by default, not worktree isolation.
+- The main session must attempt dedicated agent execution first for bootstrap, page work, content refreshes, preview-driven design edits, and validation.
+- Site-flow helper agents must use standard sub-agent execution in the current project context by default, not worktree isolation.
 - Do not require worktree/base-branch resolution just to launch a helper.
 - If agent launch succeeds, use the agent path.
 - If agent launch fails or is unavailable because of harness/session/worktree/git constraints, continue in the current project directory as `main-session-fallback`.
 - Errors caused by missing repository state, no initial commit, unresolved `HEAD`, missing branch/history metadata, or worktree/base-branch lookup failures — including `Failed to resolve base branch "HEAD": git rev-parse failed` — must be treated as fallback-eligible helper launch failures, not workflow blockers.
+- Do not skip helper launch preemptively just because git/worktree metadata may be incomplete; attempt the dedicated helper first and fallback only after actual launch failure.
 - Git/worktree availability must never be treated as a user prerequisite.
 - Agent-launch failure alone must not block the workflow; record the fallback reason in state and reports instead.
 
@@ -220,7 +221,7 @@ If `--update` is present:
 
 ### Content Update Agent Rules
 
-Attempt `plugins/site-flow/agents/content-updater.md` first with a standard sub-agent launch in the current project context. Do not require worktree isolation or base-branch resolution just to start the helper.
+You must attempt `plugins/site-flow/agents/content-updater.md` first with a standard sub-agent launch in the current project context. Do not require worktree isolation or base-branch resolution just to start the helper. Do not skip this helper preemptively just because git/worktree metadata may be incomplete.
 
 ```text
 You are updating content on an existing website page.
@@ -326,11 +327,12 @@ That means:
 - finish bootstrap with a residue scan before any page build begins
 
 ### Mandatory execution rule
-Bootstrap should be attempted in a dedicated bootstrap agent first using a standard sub-agent launch in the current project context:
+Bootstrap must be attempted in a dedicated bootstrap agent first using a standard sub-agent launch in the current project context:
 - Astro projects: `plugins/site-flow/agents/bootstrap-astro.md`
 - HTML projects: `plugins/site-flow/agents/bootstrap-html.md`
 
 Do not require worktree isolation or base-branch resolution for bootstrap helper startup.
+Do not skip bootstrap helper launch preemptively just because git/worktree metadata may be incomplete.
 
 If the bootstrap agent cannot launch, continue via `main-session-fallback` in the current project directory and record the fallback reason in state and the bootstrap report.
 
@@ -486,7 +488,7 @@ Do not carry the whole site's `content/` corpus in the main conversation context
 
 ### Step 4.3 — Page Builder Agent Rules
 
-Attempt `plugins/site-flow/agents/page-builder.md` first for every page using a standard sub-agent launch in the current project context. Do not require worktree isolation or base-branch resolution for page-builder startup. The page builder agent must:
+You must attempt `plugins/site-flow/agents/page-builder.md` first for every page using a standard sub-agent launch in the current project context. Do not require worktree isolation or base-branch resolution for page-builder startup. Do not skip this helper preemptively just because git/worktree metadata may be incomplete. The page builder agent must:
 - build only the requested page
 - use `real` content when provided
 - otherwise use `seeded-demo` content by default
@@ -558,7 +560,7 @@ Do not improvise unrelated animation systems.
 
 ## Stage 5 — Validation Agent
 
-Always finish a build or update run with a validation stage. Attempt `plugins/site-flow/agents/site-validator.md` first using a standard sub-agent launch in the current project context. Do not require worktree isolation or base-branch resolution for validation helper startup.
+Always finish a build or update run with a validation stage. You must attempt `plugins/site-flow/agents/site-validator.md` first using a standard sub-agent launch in the current project context. Do not require worktree isolation or base-branch resolution for validation helper startup. Do not skip this helper preemptively just because git/worktree metadata may be incomplete.
 
 If the validation agent cannot launch, continue via `main-session-fallback` and record the fallback reason in state and the validation report.
 

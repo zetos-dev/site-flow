@@ -166,13 +166,14 @@ Rules:
 
 After confirmation, generate the planning artifacts.
 
-Prefer a focused sub-agent for this planning/content generation stage so the main conversation stays lean. Attempt `plugins/site-flow/agents/init-planner.md` first using a standard sub-agent launch in the current project context, without worktree isolation. If the agent cannot launch, continue in the current session as documented fallback.
+Use a focused sub-agent for this planning/content generation stage so the main conversation stays lean. You must attempt `plugins/site-flow/agents/init-planner.md` first using a standard sub-agent launch in the current project context, without worktree isolation. Only continue in the current session if that helper launch actually fails.
 
 Execution policy:
 - helper-agent startup must never depend on git
-- helper agents for this workflow should use standard sub-agent execution in the current project context by default, not worktree isolation
+- helper agents for this workflow must use standard sub-agent execution in the current project context by default, not worktree isolation
 - do not require worktree/base-branch resolution just to start planning
 - if startup fails because the directory is not a repository, has no initial commit, has unresolved `HEAD`, lacks git history, or cannot resolve worktree/base-branch metadata, continue in the current project directory as `main-session-fallback`
+- do not skip the helper preemptively just because git/worktree metadata may be incomplete; attempt the helper first and fallback only after actual launch failure
 - do not surface git/worktree setup as a user prerequisite
 - record the fallback reason in managed state or reports where applicable, but do not block initialization
 
