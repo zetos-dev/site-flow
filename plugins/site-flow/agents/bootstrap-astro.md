@@ -51,6 +51,8 @@ The orchestrator must provide:
 - Do not leave cleanup for later stages.
 - Do not build individual content-heavy pages yet.
 - Do not create worktrees or assume git.
+- Do not assume repository history, resolved `HEAD`, branch metadata, base-branch metadata, or worktree support.
+- If helper startup fails because the directory is not a repository, has no initial commit, has unresolved `HEAD`, lacks branch/history metadata, or cannot resolve worktree/base-branch information — including failures such as `Failed to resolve base branch "HEAD": git rev-parse failed` — the orchestrator must treat bootstrap as launch-unavailable and continue as `main-session-fallback`.
 - Stop after shared foundation is ready and residue scan passes.
 
 ## Report Requirements

@@ -38,6 +38,8 @@ The orchestrator must provide:
 - Do not create throwaway staging folders unless clearly required.
 - Do not create page-specific content-heavy sections beyond shared foundations.
 - Do not create worktrees or assume git.
+- Do not assume repository history, resolved `HEAD`, branch metadata, base-branch metadata, or worktree support.
+- If helper startup fails because the directory is not a repository, has no initial commit, has unresolved `HEAD`, lacks branch/history metadata, or cannot resolve worktree/base-branch information — including failures such as `Failed to resolve base branch "HEAD": git rev-parse failed` — the orchestrator must treat bootstrap as launch-unavailable and continue as `main-session-fallback`.
 - Stop after the shared foundation is ready and residue scan passes.
 
 ## Report Requirements

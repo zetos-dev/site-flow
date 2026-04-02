@@ -1,7 +1,7 @@
 {
   "name": "site-flow",
   "description": "AI-driven static website workflow for Claude Code with staged sub-agent orchestration, deterministic bootstrap, and demo-ready seeded content.",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "author": {
     "name": "zetos-dev",
     "url": "https://github.com/zetos-dev/site-flow"

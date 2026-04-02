@@ -71,17 +71,21 @@ If `.site/validation-report.md` exists, summarize any active warnings.
 If the project uses Listmonk-backed email support, explain that clearly too:
 - whether the page is already wired to a real Listmonk public endpoint or updates target
 - whether the current email/messages or updates experience is only planned and still missing public wiring details
+- whether the Listmonk artifact and project config look consistent or inconsistent
 - whether any Listmonk integration warnings are active
 
 If the project uses booking/calendar support, explain that clearly too:
 - whether the current booking experience is design-only, planned, or configured
 - whether the page already uses a real public booking target or embed target
+- whether booking appears in the intended capture locations or still needs UI coverage
 - whether any booking integration warnings are active
 
 If multilingual support is enabled, explain that clearly too:
 - which language is the default language
 - which language versions are already available
 - whether the current preview is showing a fully localized or still-in-progress language version
+- whether the preview has a visible language selector/switcher
+- whether the enabled languages are actually reachable in the generated site
 
 Call out clearly when the current preview still has:
 - placeholder-heavy imagery
@@ -151,6 +155,7 @@ Rules:
 - preserve provider-specific email/update wiring when the page includes Listmonk
 - preserve provider-specific booking action or embed behavior when the page includes booking/calendar
 - when multilingual support is enabled, keep edits scoped to the active language unless the user explicitly asks for broader language updates
+- when multilingual support is enabled, preserve the shared language selector/switcher and language reachability instead of regressing to a default-language-only site shell
 - only load the affected page's content inputs and any directly relevant shared content
 - if the helper agent cannot launch, apply only the same narrowly scoped change as `main-session-fallback` and record the fallback reason
 
@@ -178,12 +183,16 @@ Output guidance like:
 ```text
 Your site is in good shape.
 
-You can keep refining it in two ways:
+You can keep refining it in three ways:
 - adjust design/layout
 - replace demo content with your real text and images
+- finish any remaining Listmonk, booking, or language setup
 
-When you update files in content/, run:
+When you update files in content/ or integration config files, run:
   /site-flow:site-build --update
+
+If this site uses more than one language, you can add another language later with:
+  /site-flow:site-translate <language-code>
 ```
 
 ## Key Principles

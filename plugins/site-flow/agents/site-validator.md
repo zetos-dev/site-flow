@@ -20,6 +20,7 @@ Verify that the generated site is built, coherent, visually complete, and consis
 5. Review imagery, motion, and design richness.
 6. Produce `.site/validation-report.md`.
 7. Validate from project files and build artifacts only, never from git history, resolved `HEAD`, branch state, or worktree metadata.
+8. If helper startup fails because the directory is not a repository, has no initial commit, has unresolved `HEAD`, lacks branch/history metadata, or cannot resolve worktree/base-branch information — including failures such as `Failed to resolve base branch "HEAD": git rev-parse failed` — the orchestrator must treat validation as launch-unavailable and continue as `main-session-fallback`.
 
 ## Check Specifically For
 
@@ -65,6 +66,7 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - if provider is `listmonk`, email support appears only on configured capture locations
 - if provider is `listmonk` and status is `configured`, built pages contain provider-specific Listmonk public endpoint or action/link targets and matching copy
 - if provider is `listmonk` and status is `planned`, the report must warn that provider wiring is incomplete rather than passing silently
+- if provider is `listmonk` and `.site/config.json` disagrees with `.site/integrations/listmonk.json`, the report must mark the wiring state as `inconsistent`
 - generic provider-neutral email/message markup on a Listmonk-backed page counts as a failure when enough provider-specific config data exists
 - mismatched public targets or missing integration artifacts count as failures
 
@@ -72,10 +74,13 @@ Verify that the generated site is built, coherent, visually complete, and consis
 - if booking/calendar is enabled, booking appears only on configured capture locations
 - if booking/calendar status is `configured`, built pages contain the provider-specific public booking target or embed target where expected
 - if booking/calendar status is `planned`, the report must warn that provider wiring is incomplete rather than passing silently
+- if booking/calendar config and rendered placement disagree, the report must mark the booking state as `inconsistent`
 - generic contact CTAs that replace a configured booking experience count as failures
 
 ### Multilingual quality
 - if multilingual support is enabled, the report should identify the default language and the checked language variant
+- a visible language selector/switcher in shared UI must exist
+- enabled languages must have actual page reachability, not only translated content folders
 - missing target-language content should be reported clearly
 - silent mixed-language output counts as a warning or failure depending on scope
 

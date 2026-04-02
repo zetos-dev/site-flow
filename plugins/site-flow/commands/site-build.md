@@ -30,6 +30,7 @@ Execution policy:
 - The main session should attempt dedicated agent execution first for bootstrap, page work, content refreshes, preview-driven design edits, and validation.
 - If agent launch succeeds, use the agent path.
 - If agent launch fails or is unavailable because of harness/session/worktree/git constraints, continue in the current project directory as `main-session-fallback`.
+- Errors caused by missing repository state, no initial commit, unresolved `HEAD`, missing branch/history metadata, or worktree/base-branch lookup failures — including `Failed to resolve base branch "HEAD": git rev-parse failed` — must be treated as fallback-eligible helper launch failures, not workflow blockers.
 - Git/worktree availability must never be treated as a user prerequisite.
 - Agent-launch failure alone must not block the workflow; record the fallback reason in state and reports instead.
 
@@ -212,7 +213,8 @@ If `--update` is present:
 5. Do **not** change structure, layout, component hierarchy, or visual language.
 6. Re-read any relevant integration config files so newly filled Listmonk or calendar values can be applied during the update.
 7. If multilingual support is enabled, update only the targeted language content and do not overwrite other language directories.
-8. After updates, run the Validation stage.
+8. If multilingual support is enabled, preserve the shared language selector/switcher and the actual reachability of enabled language pages during the update.
+9. After updates, run the Validation stage.
 
 ### Content Update Agent Rules
 
@@ -328,6 +330,8 @@ Bootstrap should be attempted in a dedicated bootstrap agent first:
 
 If the bootstrap agent cannot launch, continue via `main-session-fallback` in the current project directory and record the fallback reason in state and the bootstrap report.
 
+Treat missing repository state, no initial commit, unresolved `HEAD`, missing branch/history metadata, and worktree/base-branch lookup failures — including `Failed to resolve base branch "HEAD": git rev-parse failed` — as fallback-eligible helper launch failures, not bootstrap blockers.
+
 The main session should normally prepare inputs, dispatch the correct bootstrap agent, and record the resulting report/state. Fallback execution is acceptable when agent launch is unavailable.
 
 ### Forbidden Bootstrap Behavior
@@ -395,6 +399,8 @@ Construct a page-builder prompt that explicitly provides:
 - target language
 - default language
 - language-specific content root
+- language selector/switcher expectations in shared UI when multilingual support is enabled
+- language route reachability expectations for the target language
 - content mapping
 - section-by-section content state map: `real | seeded-demo | placeholder-minimal`
 - image source plan per section
@@ -488,6 +494,8 @@ Attempt `plugins/site-flow/agents/page-builder.md` first for every page. The pag
 
 If the page-builder agent cannot launch, the main session may execute the same scoped page task as `main-session-fallback` and must record the fallback reason.
 
+Treat missing repository state, no initial commit, unresolved `HEAD`, missing branch/history metadata, and worktree/base-branch lookup failures — including `Failed to resolve base branch "HEAD": git rev-parse failed` — as fallback-eligible helper launch failures for page work, not page-build blockers.
+
 ## Seeded Demo Content Policy
 
 This workflow defaults to `demo-ready` output.
@@ -562,11 +570,25 @@ If the validation agent cannot launch, continue via `main-session-fallback` and 
 - verify required visual sections are complete
 - fail pages that still rely on gradient placeholder boxes, empty frames, or wireframe-like design in required visual areas
 - verify motion/interaction polish where the page spec expects it
+- verify Listmonk wiring state as `planned`, `configured`, `inconsistent`, or `broken`
+- verify booking/calendar state as `design-only`, `planned`, `configured`, `inconsistent`, or `broken`
+- verify selected booking capture locations are visibly implemented in the generated pages
+- if multilingual support is enabled, verify the shared language selector/switcher exists and enabled languages have actual page reachability
 - report next actions clearly
 
 Validation must explicitly distinguish between:
 - acceptable finished visuals: real assets, stock imagery, AI-generated imagery, deliberate designed graphics
 - unacceptable unfinished visuals: blank placeholders, generic gradient slabs, empty mock frames
+
+Validation must also explicitly distinguish between:
+- Listmonk wiring states: planned, configured, inconsistent, broken
+- booking/calendar states: design-only, planned, configured, inconsistent, broken
+- multilingual states: single-language, multilingual-ready, multilingual-active, multilingual-broken
+
+If multilingual support is enabled, validation must confirm:
+- a visible language selector/switcher exists in shared UI
+- enabled languages have actual page reachability, not only translated content folders
+- localized pages are reachable without silently falling back to a default-language-only shell
 
 ## Required Reports
 
@@ -585,3 +607,12 @@ Maintain these artifacts where applicable:
   - pages built or updated
   - whether residue scan passed
   - whether the site is ready for preview
+  - whether Listmonk wiring is planned, configured, inconsistent, or broken when relevant
+  - whether booking/calendar wiring is planned, configured, inconsistent, or broken when relevant
+  - whether multilingual support is active, incomplete, or ready for another language
+
+If Listmonk is selected, remind the user they can edit `.site/integrations/listmonk.json`, then rerun `/site-flow:site-build --update` and `/site-flow:site-preview` to apply and test the integration.
+
+If booking/calendar is selected, remind the user they can edit `.site/integrations/calendar.json`, then rerun `/site-flow:site-build --update` and `/site-flow:site-preview` to apply and test the booking path.
+
+If multilingual support is enabled, remind the user they can add one more language later with `/site-flow:site-translate <language-code>`.

@@ -45,6 +45,8 @@ The orchestrator must provide:
 - Do not regress a Listmonk-backed email/messages surface into a generic provider-neutral form.
 - If the page includes booking/calendar, preserve the provider-specific booking action, embed target, and CTA behavior.
 - When multilingual support is enabled, update only the target language content.
+- When multilingual support is enabled, preserve the shared language selector/switcher and actual reachability of enabled language pages.
+- Do not allow a state where translated content exists but the site has no visible way to reach that language version.
 - Do not overwrite or normalize other language directories as part of the current update.
 - Do not silently replace approved localized copy with a different language.
 

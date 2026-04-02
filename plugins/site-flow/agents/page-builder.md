@@ -39,7 +39,7 @@ The orchestrator must provide all of the following directly in the prompt:
 15. **Placeholder policy per section** — whether placeholders are allowed and whether they are temporary only
 16. **Finish cues** — what makes the page feel visually complete instead of scaffold-like
 17. **Email/messages/updates requirements only when relevant** — provider-specific integration requirements if this page includes an email support surface; when provider is `listmonk`, use the generated integration config file as the source of truth for public endpoint, list, opt-in, and copy file mapping
-18. **Language context when multilingual support is enabled** — target language, default language, language-specific content root, and fallback language if configured
+18. **Language context when multilingual support is enabled** — target language, default language, language-specific content root, and fallback language if configured, plus the shared language-selector/switcher expectations and route reachability requirements for the target language
 19. **Booking/calendar requirements only when relevant** — provider, integration status, interaction type, public booking target, embed target if any, and booking copy file mapping when this page includes a booking surface; use the generated calendar config file as the source of truth
 
 Minimum expected `Content State Map` format:
@@ -181,8 +181,10 @@ During implementation:
 - if the page includes Listmonk-backed email support and the integration status is `configured`, render the provider-specific action/link target and success behavior instead of a generic email form
 - if the page includes Listmonk-backed email support and the integration status is `planned`, keep the intended email/messages or updates experience visible but record that provider wiring is still incomplete
 - if the page includes booking/calendar and the integration status is `configured`, preserve the provider-specific booking action or embed target instead of a generic contact CTA
-- if the page includes booking/calendar and the integration status is `planned`, keep the intended booking experience visible but record that provider wiring is still incomplete
+- if the page includes booking/calendar and the integration status is `planned`, implement the intended booking entry point in the designated capture location and record that provider wiring is still incomplete
 - when multilingual support is enabled, build only the assigned page for the target language
+- when multilingual support is enabled, preserve or implement the shared language selector/switcher and the target language route reachability required by the orchestrator
+- do not allow a state where translated content exists for the target language but the site has no visible way to reach that language version
 - do not mix copy from different languages in the same final page unless fallback is explicitly allowed by the orchestrator
 - if target-language content is missing, record the gap clearly instead of silently inventing content
 - if a required visual section cannot be completed with real, stock, AI-generated, or deliberate designed graphics, record it as unfinished rather than masking it with a generic gradient block

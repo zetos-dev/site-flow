@@ -137,6 +137,7 @@ Rules:
 - Use `planned` when the feature is enabled but the integration config still needs real values.
 - Use `configured` only when the generated integration config file later contains enough public details for real provider wiring.
 - Tell the user they can edit the generated config file after site generation and rerun build/update.
+- Booking/calendar selection must reserve visible booking UI in the chosen capture locations, not just a config artifact.
 
 Keep this optional.
 - If the user does not need booking, do not force empty integration placeholders into the project config.
@@ -158,6 +159,8 @@ Rules:
 - Treat the default language as the only required language at init time.
 - Use multilingual planning only as a structure and workflow reservation unless the user explicitly wants translation work now.
 - Prefer a shared-site structure with language-specific content files rather than separate site copies.
+- When multilingual support is enabled, the generated site must plan for a visible language selector or switcher in shared UI.
+- When additional languages are enabled later, the workflow must produce actual language-specific page reachability, not only translated content files.
 
 ## Phase 3 — Planning Outputs
 
@@ -239,6 +242,7 @@ Rules:
 - Tell the user they can edit the generated integration config files later and rerun `/site-flow:site-build` or `/site-flow:site-build --update`.
 - When multilingual support is enabled, initialize the project with a single default language and reserve structure for future language additions.
 - Prefer shared page structure with language-specific content rather than duplicating site templates per language.
+- When multilingual support is enabled, the generated site must include a visible language selector/switcher plan and language-specific page reachability.
 
 ### 3c. Create `.site/integrations/listmonk.json`
 When `optional_features.email_service.provider` is `listmonk`, create a dedicated editable provider config artifact.
@@ -419,6 +423,8 @@ Describe:
 - overall conversion path
 - where seeded demo content is acceptable vs where real content is preferred
 - when email support is enabled, where email/messages or updates surfaces belong in the funnel and which pages/sections should surface them
+- when booking/calendar is enabled, where booking entry points or sections must visibly appear
+- when multilingual support is enabled, where the shared language selector/switcher should appear and how language-specific page reachability should work
 
 ### 3g. Create `.site/content-guide.md`
 This file explains how content and image states work.
@@ -458,6 +464,8 @@ Each page spec must include:
 - accessibility / responsiveness notes
 - finish cues for how the page should feel visually complete
 - when email support is enabled, section-level email/messages or updates requirements only on relevant pages
+- when booking/calendar is enabled, section-level booking requirements only on relevant pages
+- when multilingual support is enabled, shared-UI language selector requirements and language-specific route expectations
 
 Use this structure:
 

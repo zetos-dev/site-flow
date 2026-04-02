@@ -53,12 +53,15 @@ Determine:
 - content readiness by page
 - whether optional email support is disabled, design-only, or planned/configured with a provider
 - whether optional booking/calendar is disabled, design-only, or planned/configured with a provider
-- whether multilingual support is disabled, reserved, or active
+- whether multilingual support is disabled, reserved, active, or broken/incomplete
 - default language and currently supported languages
 - whether any translated page content appears missing or incomplete
+- whether the site has a visible language selector/switcher when multilingual support is enabled
+- whether enabled languages have actual page reachability, not only translated content folders
 - whether `.site/integrations/listmonk.json` exists when Listmonk is selected
 - whether `.site/integrations/calendar.json` exists when booking/calendar support is enabled
-- whether Listmonk wiring appears planned, configured, or broken
+- whether Listmonk wiring appears planned, configured, inconsistent, or broken
+- whether booking/calendar wiring appears planned, configured, inconsistent, or broken
 - whether agent-first execution was used or fallback was used
 - whether any main-session execution violations were recorded
 - the latest fallback reason if present
@@ -92,14 +95,16 @@ Delegation: {agent-used / fallback-used / issue found}
 Last fallback: {none / reason summary}
 Email Support: {not planned / design-only / planned with Listmonk / configured with Listmonk / planned with other service}
 Listmonk Artifact: {n/a / present / missing}
-Email Wiring: {n/a / planned / configured / broken}
+Email Wiring: {n/a / planned / configured / inconsistent / broken}
 Calendar Booking: {not planned / design-only / planned / configured}
 Calendar Artifact: {n/a / present / missing}
-Calendar Wiring: {n/a / planned / configured / broken}
+Calendar Wiring: {n/a / planned / configured / inconsistent / broken}
 Languages: {zh / zh, en / not enabled}
 Default Language: {zh / n/a}
 Translation Mode: {manual-assisted / n/a}
-Translation Status: {single-language / multilingual-ready / multilingual-active}
+Translation Status: {single-language / multilingual-ready / multilingual-active / multilingual-broken}
+Language Selector: {n/a / present / missing}
+Language Reachability: {n/a / ready / partial / broken}
 
 Progress: [{progress_bar}] {built_pages}/{total_pages} pages
 Bootstrap: {complete / pending}
@@ -132,6 +137,9 @@ Design Richness:
 
 Next Step:
 - {most useful next command or install action}
+- edit `.site/integrations/listmonk.json` then run `/site-flow:site-build --update` and `/site-flow:site-preview` when Listmonk is still planned or inconsistent
+- edit `.site/integrations/calendar.json` then run `/site-flow:site-build --update` and `/site-flow:site-preview` when booking is still planned or inconsistent
+- run `/site-flow:site-translate <language-code>` when multilingual support is enabled and the user wants to add one more language
 ```
 
 ### 4. Detailed Page View
@@ -149,10 +157,12 @@ Show:
 - what kind of imagery is being used
 - whether real images are present
 - whether the page includes email support and what mode/provider is planned if relevant
-- whether the page includes Listmonk-backed email support, whether the integration artifact exists, and whether the page looks planned, configured, or broken
+- whether the page includes Listmonk-backed email support, whether the integration artifact exists, and whether the page looks planned, configured, inconsistent, or broken
 - whether the page includes booking/calendar and what mode/provider is planned if relevant
+- whether booking appears in the configured capture locations or looks missing
 - which languages currently have content for this page
 - whether any language version looks missing or incomplete
+- whether the page is reachable through the visible language-switching path when multilingual support is enabled
 - whether the page still has placeholder debt or scaffold-like sections
 - what should be replaced next for best impact
 
@@ -186,3 +196,5 @@ Best Next Replacements:
 - Call out delegation violations clearly if any exist.
 - Treat gradient-box visuals, empty frames, and wireframe-like sections as unfinished design debt.
 - Make it obvious that demo-ready content is intentional and can be swapped later, while unfinished design output is not acceptable final quality.
+- If Listmonk config and project state disagree, report the integration as inconsistent rather than silently trusting one file.
+- If multilingual support is enabled but no visible selector/switcher or language reachability is found, report multilingual as broken/incomplete.
